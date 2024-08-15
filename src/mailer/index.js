@@ -1,0 +1,36 @@
+const nodemailer = require('nodemailer');
+const { MAIL_PORT, MAIL_USER, MAIL_PASSWORD, MAIL_HOST } = require('../config');
+
+const transporter = nodemailer.createTransport({
+  host: MAIL_HOST,
+  port: MAIL_PORT,
+  secure: false, // or 'STARTTLS'
+  auth: {
+    user: MAIL_USER,
+    pass: MAIL_PASSWORD
+  }
+});
+
+const sendOtp = async (otp, email) => {
+
+
+
+  const mailOptions = {
+    from: 'otp@example.com',
+    to: email,
+    subject: 'Your One-Time Password (OTP)',
+    text: `Enter the following OTP to verify your email address: ${otp}`
+  };
+
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.log(error);
+    }
+    console.log('Email sent: ' + info.response);
+  });
+
+  return 'OTP sent successfully';
+};
+
+module.exports = sendOtp;

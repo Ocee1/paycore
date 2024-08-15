@@ -1,4 +1,4 @@
-import { Model } from 'objection';
+const { Model } = require('objection');
 
 class User extends Model {
   static get tableName() {
@@ -13,9 +13,12 @@ class User extends Model {
         id: { type: 'integer' },
         email: { type: 'string', format: 'email' },
         password: { type: 'string' },
+        first_name: { type: 'string' },
+        last_name: { type: 'string' },
         transaction_pin: { type: 'string' },
-        createdAt: { type: 'datetime' },
-        updatedAt: { type: 'datetime' }
+        created_at: { type: 'datetime' },
+        updated_at: { type: 'datetime' },
+        deleted_at: { type: 'datetime', nullable: true }
       }
     };
   }

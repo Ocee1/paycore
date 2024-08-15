@@ -1,5 +1,5 @@
-import { Model } from 'objection';
-import User from './user.model';
+const { Model } = require('objection');
+const User = require('./user.model');
 
 class Token extends Model {
   static get tableName() {
@@ -14,9 +14,10 @@ class Token extends Model {
         id: { type: 'integer' },
         userId: { type: 'integer', references: 'users.id' },
         token: { type: 'string' },
-        expiresAt: { type: 'datetime' },
-        createdAt: { type: 'datetime' },
-        updatedAt: { type: 'datetime' }
+        expires_at: { type: 'datetime' },
+        created_at: { type: 'datetime' },
+        updated_at: { type: 'datetime' },
+        deleted_at: { type: 'datetime', nullable: true }
       }
     };
   }

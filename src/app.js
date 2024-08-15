@@ -1,8 +1,8 @@
-import express from "express";
-import { DATABASE_HOST, DATABASE_PORT } from "./config/index.js";
+const express = require("express");
+const { DATABASE_HOST, DATABASE_PORT, SERVER_PORT } = require("./config/index.js");
 
 console.log(DATABASE_HOST)
-const PORT = DATABASE_PORT;
+const PORT = SERVER_PORT;
 
 const createServer = async () => {
     const app = express();

@@ -1,6 +1,5 @@
-// account.model.js
-import { Model } from 'objection';
-import User from './user.model';
+const { Model } = require('objection');
+const User = require('./user.model');
 
 class Account extends Model {
   static get tableName() {
@@ -16,10 +15,12 @@ class Account extends Model {
         userId: { type: 'integer', references: 'users.id' },
         balance: { type: 'decimal' },
         bank: { type: 'string' },
-        bank_code: { type: 'string' },
         account_number: { type: 'string' },
-        createdAt: { type: 'datetime' },
-        updatedAt: { type: 'datetime' }
+        account_name: {type: 'string'},
+        payload_response: { type: 'text' },
+        created_at: { type: 'datetime' },
+        updated_at: { type: 'datetime' },
+        deleted_at: { type: 'datetime', nullable: true }
       }
     };
   }
