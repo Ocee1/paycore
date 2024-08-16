@@ -3,7 +3,7 @@ const { ATLAS_SECRET, CREATE_ACCOUNT_URL, atlasConfig } = require("../config");
 const sendOtp = require("../mailer");
 const { createAccount } = require("../services/accountService");
 const { createUser, getUserById, findByIdAndUpdate, removeUser, getUserByEmail } = require("../services/user.service");
-const { generateOtp, createToken, hashPassword, verifyPassword } = require("../utils/token");
+const { generateOtp, createToken, hashPassword, verifyPassword, verifyOtp } = require("../utils/token");
 const { loginValidation, signupValidation } = require("../validation/userValidation");
 
 const registerUser = async (req, res, next) => {
@@ -65,17 +65,21 @@ const loginUser = async (req, res) => {
     try {
         const { error } = loginValidation(body);
 
-        if (error) res.status(400).json({ error: 'Bad request' })
+        if (error) return res.status(400).json({ error: 'Bad request' })
 
         const isUser = await getUserByEmail(body.email);
-        if (!isUser) return res.status(404).json({ error: 'Invalid login credentials' });
+        if (!isUser) {
+            return res.status(404).json({ error: 'Invalid login credentials' });
+        }
 
         const validPassword = await verifyPassword(body.password, isUser.password);
 
-        if (!validPassword) res.status(400).json({ error: 'Invalid login credentials' })
+        if (!validPassword) {
+            return res.status(400).json({ error: 'Invalid login credentials' });
+        }
 
         const otp = await generateOtp(isUser.id);
-        await sendOtp(isUser.mail, otp);
+        await sendOtp(otp, isUser.email);
 
 
         res.status(200).json({ message: 'OTP sent to your email' })
@@ -89,13 +93,13 @@ const loginUser = async (req, res) => {
 const verifyOtpLogin = async (req, res) => {
     const { email, otp } = req.body;
 
-    const isValidOtp = await verifyOTP(email, otp);
+    const isValidOtp = await verifyOtp(email, otp);
     if (!isValidOtp) {
         res.status(400).json({ message: 'Invalid or expired OTP' })
     }
 
     const user = getUserByEmail(email);
-    const token = await createToken({ email, userId: user.id })
+    const token = await createToken({ email, userId: user.id }, 'ghfgvhbnuvtjb')
 
     const payload = {
         message: 'Login successful',

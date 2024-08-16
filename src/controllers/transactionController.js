@@ -5,6 +5,7 @@ const Transaction = require("../models/transaction");
 const { createTransaction, getWebhook } = require("../services/transactionService");
 const { getAccount } = require("../services/accountService");
 const axios = require("axios");
+const { createWebhook } = require("../services/webHook");
 
 
 const createTransfer = async (req, res) => {
@@ -68,7 +69,15 @@ const receiveFunds = async (req, res) => {
         return res.status(200).send('Processing transaction');
     }
 
+
     const { type, source, secret, session_id, account_number, amount } = req.body;
+
+    const webPayload = {
+        session_id,
+        meta_data: req.body,
+    }
+
+    const hook = await createWebhook(webPayload);
 
     const transactionData = {
         senderId: user.id,

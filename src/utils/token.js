@@ -27,7 +27,7 @@ function verifyToken(token, secret) {
 
 const generateOtp = async (userId) => {
     const otp = Math.floor(100000 + Math.random() * 900000);
-    const expiresAt = moment().add(5, 'minutes').toString();
+    const expiresAt = moment().add(5, 'minutes').toISOString().slice(0, 19).replace('T', ' ');
     console.log(expiresAt)
 
     await Otp.query().insert({
@@ -46,11 +46,11 @@ const verifyOtp = async (userId, otp) => {
     });
 
     if (!otpRecord) {
-        throw new Error('Invalid OTP');
+        return false;
     }
 
     if (moment(otpRecord.expiresAt).isBefore(moment())) {
-        throw new Error('OTP has expired');
+        return false;
     }
 
     await Otp.query().deleteById(otpRecord.id); 

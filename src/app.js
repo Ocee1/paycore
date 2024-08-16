@@ -43,8 +43,5 @@ function initializeRoutes(app, routes) {
     });
 }
 
-// function initializeErrorHandling(app) {
-//     app.use(errorMiddleware);
-// }
 
 module.exports = createApp;
