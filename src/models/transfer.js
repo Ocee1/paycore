@@ -1,40 +1,45 @@
 const { Model } = require('objection');
-const User = require('./user');
+const Transaction = require('./transaction');
 
-class Transaction extends Model {
+class Transfer extends Model {
   static get tableName() {
-    return 'transactions';
+    return 'transfers';
   }
+
+ 
 
   static get jsonSchema() {
     return {
       type: 'object',
       required: ['senderId', 'status', 'transactionType', 'amount'],
-
       properties: {
-        id: { type: 'integer' },
-        senderId: { type: 'string' },
+        id: { type: 'integer' }, // Changed to 'integer'
+        transactionId: { type: 'integer' }, 
         status: { type: 'integer', enum: [ 0, 1, 2, 3] },
         amount: { type: 'string' },
+        bank: { type: 'string' },
+        bank_code: { type: 'string' },
+        account_number: { type: 'string' },
+        account_name: { type: 'string' },
+        narration: { type: 'string' },
+        payload_response: { type: 'object' }, 
+        reference: { type: 'string' },
         transactionType: { type: 'string', enum: ['credit', 'debit'] },
-        narration: { type: ['string',] },
-        balanceBefore: { type: ['string',] },
-        balanceAfter: { type: ['string',] },
-        deleted_at: { type: 'string', format: 'date-time' },
         createdAt: { type: 'string', format: 'date-time' },
         updatedAt: { type: 'string', format: 'date-time' },
-      },
+        deletedAt: { type: 'string', format: 'date-time' },
+      }
     };
   }
 
   static get relationMappings() {
     return {
-      user: {
+      transaction: {
         relation: Model.BelongsToOneRelation,
-        modelClass: User,
+        modelClass: Transaction,
         join: {
-          from: 'transactions.senderId',
-          to: 'users.id'
+          from: 'transfers.transactionId',
+          to: 'transactions.id'
         }
       }
     };
@@ -51,4 +56,4 @@ class Transaction extends Model {
   }
 }
 
-module.exports = Transaction;
+module.exports = Transfer;

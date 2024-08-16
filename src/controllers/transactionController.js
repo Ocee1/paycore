@@ -1,8 +1,13 @@
-const { GET_ACCOUNT_URL, ATLAS_SECRET } = require("../config");
+const { GET_ACCOUNT_URL, ATLAS_SECRET, DATABASE_HOST, DATABASE_PASSWORD, WEGHOOK_SECRET, atlasConfig } = require("../config");
 const validate = require("../validation/transactionValidation");
+const { getUserById, getUserByAccount, } = require("../services/user.service");
+const Transaction = require("../models/transaction");
+const { createTransaction, getWebhook } = require("../services/transactionService");
+const { getAccount } = require("../services/accountService");
+const axios = require("axios");
 
 
-const createTransaction = async (req, res, next) => {
+const createTransfer = async (req, res) => {
     const { body, user } = req;
     const { amount, transactionType, transactionPin, account_number, bank_code, narration, reference } = body;
 
@@ -51,27 +56,44 @@ const createTransaction = async (req, res, next) => {
 };
 
 const receiveFunds = async (req, res) => {
-    const paymentProviderSignature = req.headers['x-payment-signature']; 
     const payload = req.body;
 
-    
-    // Implement your validation logic here
-    const isValidRequest = validateRequest(body, paymentProviderSignature);
-
+    const isValidRequest = validateSignature(payload.secret);
     if (!isValidRequest) {
         return res.status(400).send('Invalid request');
     }
 
-    // Extract payment data from the request body
-    const { amount, currency, userId, transactionId } = body;
+    const isExisting = await getWebhook(payload.session_id)
+    if (isExisting) {
+        return res.status(200).send('Processing transaction');
+    }
 
+    const { type, source, secret, session_id, account_number, amount } = req.body;
+
+    const transactionData = {
+        senderId: user.id,
+        transactionType: type,
+        amount,
+        narration,
+        status: 0,
+        balanceBefore: balance,
+    }
+
+    const transferData = {
+        amount,
+        bank: accountInfo.data.data.bank,
+        bank_code,
+        account_number,
+        account_name: accountInfo.data.data.account_name,
+        narration,
+        status: 0,
+        reference,
+        transactionType
+    }
     try {
-        // if (payload === 'deposit') {
-        //     await 
-        // }
-    
-        // Process the payment data (e.g., update user's balance)
-        await processPayment(userId, amount, transactionId);
+        if (payload.type === 'collection') {
+            const transfer = await processTransfer(account_number, transactionData, transferData)
+        }
 
         // Send a success response to acknowledge the webhook
         res.status(200).send('Webhook received and processed');
@@ -81,28 +103,39 @@ const receiveFunds = async (req, res) => {
     }
 };
 
-const processTransfer = async (account) => {
-    const userData = getUserByAccount(payload.source.account_number);
-    if (!userData) {
-        res.status(404).json({ error: { message: 'accpunt not found'} });
+const processTransfer = async (account, txnData, trfData) => {
+    const accountData = getAccount(account);
+    const transactionData = {
+        ...txnData,
+        balanceBefore: userData.balance,
+    };
+
+    if (!accountData) {
+        res.status(404).json({ error: { message: 'account not found' } });
     }
 
-}
+    const transaction = await createTransaction(transactionData);
 
-
-
-function validateRequest(body, signature) {
-    // Implement your validation logic here
-    // Example: Compare the signature with a hash of the request body
-    return true; // or false if invalid
+    const transferData = {
+        transactionId: transaction.id.toString(),
+        ...trfData
+    };
+    const transfer = await Transfer.query().insert(transferData);
+    return { transaction, transfer };
 }
 
 const verifyTransactionPin = async (userId, transactionPin) => {
-    const user = await this.userService.getUserById(userId)
+    const user = await getUserById(userId)
     if (!user || !user.transactionPin) {
-      throw new Error('Transaction pin not set');
+        throw new Error('Transaction pin not set');
     }
     return Crypto.compareStrings(user.transactionPin, transactionPin);
-  }
+}
 
-module.exports = { createTransaction };
+const validateSignature = async (secret) => {
+    if (WEGHOOK_SECRET !== secret) {
+        return false;
+    }
+    return true;
+}
+module.exports = { createTransfer, receiveFunds, };

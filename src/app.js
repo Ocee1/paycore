@@ -1,15 +1,50 @@
-const express = require("express");
-const { DATABASE_HOST, DATABASE_PORT, SERVER_PORT } = require("./config/index.js");
+const express = require('express');
+const hpp = require('hpp');
+const compression = require('compression');
+const cors = require('cors');
+const helmet = require('helmet');
+require('./cron/reversalJob');
+require('./cron/txnJob');
+const knex = require('./config/objection');
+const { corsOptions, DATABASE_PASSWORD, DATABASE_USER, MONGO_URI, NODE_ENV, PORT } = require('./config/index');
 
-console.log(DATABASE_HOST)
-const PORT = SERVER_PORT;
 
-const createServer = async () => {
+function createApp(routes) {
     const app = express();
+    const env = NODE_ENV || 'development';
+    const port = PORT || 4000;
+
+    initializeMiddlewares(app);
+    initializeRoutes(app, routes);
+
+    return {
+        listen: () => {
+            const server = app.listen(port, () => {
+                console.log(`🚀 App listening on the port ${port}`);
+                console.log(`================================`);
+            });
+        },
+        getServer: () => app,
+    };
+}
+
+function initializeMiddlewares(app) {
+    app.use(cors());
+    app.use(helmet());
+    app.use(hpp());
+    app.use(compression());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-    })
 }
-createServer();
+
+function initializeRoutes(app, routes) {
+    routes.forEach(route => {
+        app.use('/api', route);
+    });
+}
+
+// function initializeErrorHandling(app) {
+//     app.use(errorMiddleware);
+// }
+
+module.exports = createApp;

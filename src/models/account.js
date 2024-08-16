@@ -1,5 +1,5 @@
 const { Model } = require('objection');
-const User = require('./user.model');
+const User = require('./user');
 
 class Account extends Model {
   static get tableName() {
@@ -9,18 +9,18 @@ class Account extends Model {
   static get jsonSchema() {
     return {
       type: 'object',
-      required: ['userId', 'balance', 'bank', 'bank_code, account_number'],
+      required: ['userId', 'balance', 'bank', 'account_number'],
       properties: {
         id: { type: 'integer' },
-        userId: { type: 'integer', references: 'users.id' },
-        balance: { type: 'decimal' },
+        userId: { type: 'integer' },
+        balance: { type: 'integer' },
         bank: { type: 'string' },
         account_number: { type: 'string' },
         account_name: {type: 'string'},
-        payload_response: { type: 'text' },
-        created_at: { type: 'datetime' },
-        updated_at: { type: 'datetime' },
-        deleted_at: { type: 'datetime', nullable: true }
+        payload_response: { type: 'object' },
+        created_at: { type: 'string', format: 'date-time' },
+        updated_at: { type: 'string', format: 'date-time' },
+        deleted_at: { type: 'string', format: 'date-time', nullable: true },
       }
     };
   }
@@ -39,4 +39,4 @@ class Account extends Model {
   }
 }
 
-export default Account;
+module.exports = Account;

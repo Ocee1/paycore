@@ -25,7 +25,7 @@ cron.schedule('*/10 * * * *', async () => {
 
       const reversal = await Transaction.query().insert(data);
 
-      await Transaction.query().patch({ status: 'completed' }).where({ id: transaction.id });
+      await Transaction.query().patch({ status: 3 }).where({ id: transaction.id });
 
       console.log(`Reversed transaction ID: ${transaction.id}, created reversal ID: ${reversal.id}`);
     }

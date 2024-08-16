@@ -30,7 +30,14 @@ const removeTransaction = async (id) => {
 const createWebhook = async (webHook) => {
     const data = await Webhook.query().insert(webHook);
     return data;
-}
+};
+
+const getWebhook = async (session_id) => {
+    const hook = await Webhook.query().findOne({ session_id })
+    return data;
+};
+
+
 
 module.exports = {
     createTransaction,
@@ -39,4 +46,5 @@ module.exports = {
     findTransactionByIdAndUpdate,
     removeTransaction,
     createWebhook,
+    getWebhook
 };

@@ -1,5 +1,5 @@
 const { Model } = require('objection');
-const User = require('./user.model');
+const User = require('./user');
 
 class Token extends Model {
   static get tableName() {
@@ -12,12 +12,12 @@ class Token extends Model {
       required: ['userId', 'token'],
       properties: {
         id: { type: 'integer' },
-        userId: { type: 'integer', references: 'users.id' },
+        userId: { type: 'integer', },
         token: { type: 'string' },
-        expires_at: { type: 'datetime' },
-        created_at: { type: 'datetime' },
-        updated_at: { type: 'datetime' },
-        deleted_at: { type: 'datetime', nullable: true }
+        expires_at: { type: 'string', format: 'date-time' },
+        created_at: { type: 'string', format: 'date-time' },
+        updated_at: { type: 'string', format: 'date-time' },
+        deleted_at: { type: 'string', format: 'date-time', nullable: true},
       }
     };
   }
@@ -36,4 +36,4 @@ class Token extends Model {
   }
 }
 
-export default Token;
+module.exports = Token;

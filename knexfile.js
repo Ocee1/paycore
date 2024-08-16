@@ -1,25 +1,24 @@
 const { DATABASE_HOST, DATABASE_PASSWORD, DATABASE_USER, DATABASE_PORT } = require("./src/config");
 
 
-const config = {
+module.exports = {
   development: {
     client: 'mysql2',
     connection: {
       host: DATABASE_HOST,
       user: DATABASE_USER,
       password: DATABASE_PASSWORD,
-      database: 'txn-db',
+      database: 'paycore',
       port: DATABASE_PORT,
     },
     migrations: {
       tableName: 'txn-migrations',
-      directory: 'migrations',
+      directory: './migrations',
     },
 
     seeds: {
-      directory: 'seeds'
+      directory: './seeds'
     }
   },
 }
 
-module.exports = { config }

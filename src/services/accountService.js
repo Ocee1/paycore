@@ -1,4 +1,4 @@
-const { default: Account } = require("../models/account");
+const Account = require("../models/account");
 
 
 
@@ -8,23 +8,28 @@ const createAccount = async (data) => {
 };
 
 const getAccountById = async (id) => {
-    const user = await Account.query().findById(id);
-    return user;
+    const account = await Account.query().findById(id);
+    return account;
+};
+
+const getAccount = async (account_number) => {
+    const accoint = await Account.query().findOne({ account_number });
+    return account;
 }
 
 const getAccountByEmail = async (email) => {
-    const user = (await Account.query().where({ email }).first());
-    return user;
+    const account = (await Account.query().where({ email }).first());
+    return account;
 };
 
 const findAccountByIdAndUpdate = async (data, id) => {
-    const user = await Account.query().patchAndFetchById(id, data);
-    return user;
+    const account = await Account.query().patchAndFetchById(id, data);
+    return account;
 };
 
 const removeAccount = async (id) => {
-    const user = await Account.query().deleteById(+id);
-    return user;
+    const account = await Account.query().deleteById(+id);
+    return account;
 };
 
 module.exports = {
@@ -32,5 +37,6 @@ module.exports = {
     getAccountById,
     getAccountByEmail,
     findAccountByIdAndUpdate,
-    removeAccount
+    removeAccount,
+    getAccount
 };

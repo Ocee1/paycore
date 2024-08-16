@@ -16,12 +16,12 @@ class User extends Model {
         first_name: { type: 'string' },
         last_name: { type: 'string' },
         transaction_pin: { type: 'string' },
-        created_at: { type: 'datetime' },
-        updated_at: { type: 'datetime' },
-        deleted_at: { type: 'datetime', nullable: true }
+        created_at: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' },
+        deletedAt: { type: 'string', format: 'date-time', nullable: true },
       }
     };
   }
 }
 
-export default User;
+module.exports = User;

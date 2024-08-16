@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const moment = require('moment');
-const Otp = require('./models/otp');
+const Otp = require('../models/otp');
+
 
 
 function createToken(payload, secret) {
@@ -26,7 +27,8 @@ function verifyToken(token, secret) {
 
 const generateOtp = async (userId) => {
     const otp = Math.floor(100000 + Math.random() * 900000);
-    const expiresAt = moment().add(5, 'minutes').toDate();
+    const expiresAt = moment().add(5, 'minutes').toString();
+    console.log(expiresAt)
 
     await Otp.query().insert({
         userId,
@@ -57,12 +59,12 @@ const verifyOtp = async (userId, otp) => {
 };
 
 
-const crypto = require('crypto');
+
 
 
 function hashPassword(password) {
     const salt = 12; 
-    const hash = crypto.pbkdf2Sync(password, 12, 1000, 64, `sha512`).toString(`hex`); 
+    const hash = crypto.pbkdf2Sync(password, '12', 1000, 64, `sha512`).toString(`hex`); 
     return {
         hash: hash
     };
@@ -70,7 +72,7 @@ function hashPassword(password) {
 
 
 function verifyPassword(password, hash) {
-    const hashToVerify = crypto.pbkdf2Sync(password, 12, 1000, 64, `sha512`).toString(`hex`); 
+    const hashToVerify = crypto.pbkdf2Sync(password, '12', 1000, 64, `sha512`).toString(`hex`); 
     return hash === hashToVerify; 
 }
 

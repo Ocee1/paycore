@@ -1,11 +1,13 @@
-import cron from 'node-cron'
+const cron = require('node-cron');
 
-import { Model } from 'objection';
-import Knex from 'knex';
-import User from '../models/user';
-import { Transaction } from '../models/transactions';
-import { ATLAS_SECRET, atlasConfig, CREATE_TRANSFER_URL } from '../config/config';
-import axios from 'axios';
+const { Model } = require('objection');
+const Knex = require('knex');
+const User = require('../models/user');
+const { ATLAS_SECRET, atlasConfig, CREATE_TRANSFER_URL } = require('../config/index');
+const axios = require('axios');
+const { findAccountByIdAndUpdate, getAccount } = require('../services/accountService');
+const Transaction = require('../models/transaction');
+
 
 
 
@@ -13,10 +15,11 @@ cron.schedule('* * * * *', async () => {
   console.log('Checking for pending transfers every minute');
 
   try {
-    const pendingTransactions = await Transaction.query().where({ status: 'pending'});
+    const pendingTransactions = await Transaction.query().where({ status: 'pending' });
 
     for (const transaction of pendingTransactions) {
       const transfer = await Transfer.query().findOne({ transactionId: transaction.id });
+      await Transaction.query().patch({ status: 1 }).where({ id: transfer.transactionId });
       const data = {
         transactionType: transfer.transactionType,
         amount: transfer.amount,
@@ -29,11 +32,22 @@ cron.schedule('* * * * *', async () => {
       }
       const accountRes = await axios(atlasConfig(data, CREATE_TRANSFER_URL, 'post', ATLAS_SECRET));
       if (accountRes.data.status !== 'success') {
-        await Transaction.query().patch({ status: 'failed' }).where({ id: transfer.transactionId });
-        // await Transfer.query().patch({ status: 'failed' }).where({ id: transfer.id });
+        await Transaction.query().patch({ status: 2 }).where({ id: transfer.transactionId });
+        await Transfer.query().patch({ status: 2 }).where({ id: transfer.id });
       }
+      const txnAccount = await getAccount(account_number);
 
-      await Transaction.query().patch({ status: 'completed' }).where({ id: transfer.transactionId });
+      if (transactionType === 'debit') {
+        
+        const balance = txnAccount.balance - amount;
+        const account = await findAccountByIdAndUpdate({ balance }, txnAccount.id);
+        await Transaction.query().patch({ status: 'completed' }).where({ id: transfer.transactionId });
+
+        console.log(`Processed transaction ID: ${transaction.id}`);
+      }
+      const balance = txnAccount.balance + amount;
+      const account = await findAccountByIdAndUpdate({ balance }, txnAccount.id);
+      await Transaction.query().patch({ status: 3 }).where({ id: transfer.transactionId });
 
       console.log(`Processed transaction ID: ${transaction.id}`);
     }

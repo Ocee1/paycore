@@ -1,4 +1,5 @@
 const { Model } = require('objection');
+const User = require('./user');
 
 class Otp extends Model{
   static get tableName() {
@@ -11,14 +12,27 @@ class Otp extends Model{
       required: ['userId', 'otp', 'expiresAt'],
       properties: {
         id: { type: 'integer' },
-        userId: { type: 'integer', references: 'users.id' },
+        userId: { type: 'integer' },
         otp: { type: 'string' },
-        expiresAt: { type: 'datetime' },
-        createdAt: { type: 'datetime' },
-        updatedAt: { type: 'datetime' }
+        expiresAt: { type: 'string', format: 'date-time' },
+        createdAt: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' },
+      }
+    };
+  }
+
+  static get relationMappings() {
+    return {
+      user: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: User,
+        join: {
+          from: 'otps.userId',
+          to: 'users.id'
+        }
       }
     };
   }
 }
 
-export default Otp;
+module.exports = Otp;

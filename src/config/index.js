@@ -1,5 +1,6 @@
 // import { AxiosRequestConfig } from 'axios';
 const dotenv = require('dotenv');
+const qs = require('qs');
 dotenv.config();
 
 
@@ -23,6 +24,8 @@ const MAIL_PASSWORD = process.env.MAIL_PASSWORD;
 const MAIL_USER = process.env.MAIL_USER;
 const MAIL_PORT = process.env.MAIL_PORT;
 const MAIL_HOST = process.env.MAIL_HOST;
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+const WEBHOOK_URL = process.env.WEBHOOK_URL;
 
 const atlasConfig = (data, reqUrl, method, secret) => {
   const accountData = qs.stringify(data);
@@ -64,5 +67,7 @@ module.exports = {
   NODE_ENV,
   LOG_DIR,
   atlasConfig,
-  corsOptions
+  corsOptions,
+  WEBHOOK_SECRET,
+  WEBHOOK_URL
 }
