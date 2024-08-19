@@ -33,4 +33,27 @@ const sendOtp = async (otp, email) => {
   return 'OTP sent successfully';
 };
 
-module.exports = sendOtp;
+
+const sendCreditMail = async (email, payload) => {
+  const mailOptions = {
+    from: 'otp@example.com',
+    to: email,
+    subject: 'Paycore - Credit Alert',
+    text: `This is to notify you that a credit alert occurred on your account with us. Please review the details below: \nAccount: ${payload.account_number} \nAmount: ${payload.amount}`
+  };
+
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.log(error);
+    }
+    console.log('Email sent: ' + info.response);
+  });
+
+  return 'OTP sent successfully';
+};
+
+module.exports = {
+  sendOtp,
+  sendCreditMail
+}

@@ -14,6 +14,8 @@ class Deposit extends Model {
                 type: { type: 'string' },
                 amount: { type: 'number' },
                 session_id: { type: 'integer' },
+                userId: { type: 'integer' },
+                status: { type: 'integer', enum: [ 0, 1, 2, 3] },
                 account_number: { type: 'string' },
                 source: {
                     type: 'object',
@@ -31,6 +33,18 @@ class Deposit extends Model {
             }
         }
     }
+    static get relationMappings() {
+        return {
+          user: {
+            relation: Model.BelongsToOneRelation,
+            modelClass: User,
+            join: {
+              from: 'deposits.userId',
+              to: 'users.id'
+            }
+          }
+        };
+      }
 }
 
 module.exports = Deposit;

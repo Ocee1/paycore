@@ -17,13 +17,8 @@ const createToken = async (payload) => {
     const expiresAt = moment().add(60, 'minutes').toISOString().slice(0, 19).replace('T', ' ');
     const token = await `${base64Payload}.${signature}`;
 
-    await console.log('param:', {
-        userId: ~~payload.userId,
-        token: token,
-        expiresAt
-    })
     const savedToks = saveToken(payload.userId, token)
-    console.log('shiii:  ', savedToks)
+
 
     return token;
 }
@@ -39,7 +34,7 @@ const verifyToken = async (token)=> {
     const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
 
     const userToken = await getToken(token);
-    console.log('tokaaaaaa: ', userToken)
+
     if (userToken.token !== token) {
         return 'Invalid token no';
     }
@@ -63,6 +58,7 @@ const generateOtp = async (userId) => {
 const verifyOtp = async (userId, otp) => {
     
     const result = await getOtp(userId, otp);
+    if (!result) return false;
 
     // const result = JSON.stringify(otpRecord);
     const expiresAtMoment = moment(result.expiresAt, 'YYYY-MM-DD HH:mm:ss')
@@ -97,13 +93,8 @@ const saveOtp = async (userId, otp) => {
 
     const expiresAt = moment().add(5, 'minutes').format('YYYY-MM-DD HH:mm:ss');
 
-    console.log(expiresAt);
-
     const userOtp = await Otp.query().insert({ userId, otp, expiresAt });
     return userOtp;
 }
-
-
-
 
 module.exports = { createToken, verifyToken, generateOtp, verifyOtp, hashPassword, verifyPassword, saveOtp }

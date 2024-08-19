@@ -17,7 +17,6 @@ const getUserById = async (id) => {
 
 const getUserByEmail = async (email) => {
     const user = (await User.query().where({ email }).first());
-    console.log(`let me see that issue here too o: ${user}`)
     return user;
 };
 

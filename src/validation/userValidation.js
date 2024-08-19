@@ -23,7 +23,7 @@ const loginValidation = (data) => {
 
 const transactionPinValidation = (data) => {
     const schema = Joi.object({
-      transactionPin: Joi.string().pattern(/^\d{4}$/)
+      transaction_pin: Joi.string().pattern(/^\d{4}$/)
       .required()
       .messages({
         'string.base': 'Transaction pin should be a string',

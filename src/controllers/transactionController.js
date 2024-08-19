@@ -1,12 +1,10 @@
-const { GET_ACCOUNT_URL, ATLAS_SECRET, DATABASE_HOST, DATABASE_PASSWORD, WEGHOOK_SECRET, atlasConfig } = require("../config");
+const { GET_ACCOUNT_URL, ATLAS_SECRET, atlasConfig } = require("../config");
 const validate = require("../validation/transactionValidation");
-const { getUserById, getUserByAccount, } = require("../services/user.service");
+const { getUserById, } = require("../services/user.service");
 const Transaction = require("../models/transaction");
-const { createTransaction, getWebhook } = require("../services/transactionService");
-const { getAccount } = require("../services/accountService");
+const { createTransaction, } = require("../services/transactionService");
 const axios = require("axios");
-const { createWebhook } = require("../services/webHook");
-const Deposit = require("../models/deposit");
+
 
 
 const createTransfer = async (req, res) => {
@@ -57,76 +55,9 @@ const createTransfer = async (req, res) => {
     }
 };
 
-const receiveFunds = async (req, res) => {
-    const payload = req.body;
 
-    const isValidRequest = validateSignature(payload.secret);
-    if (!isValidRequest) {
-        return res.status(400).send('Invalid request');
-    }
 
-    const isExisting = await getWebhook(payload.session_id)
-    if (isExisting) {
-        return res.status(200).send('Processing transaction');
-    }
 
-    const { type, source, session_id, account_number, amount } = req.body;
-
-    const webPayload = {
-        session_id,
-        meta_data: req.body,
-    }
-
-    const hook = await createWebhook(webPayload);
-
-    const transactionData = {
-        transactionType: type,
-        amount,
-        narration,
-        status: 0,
-        balanceBefore: balance,
-    }
-
-    await delete payload.secret;
-    const depositData = {
-        ...payload
-    }
-    try {
-        if (payload.type === 'collection') {
-            const transfer = await processDeposit(account_number, transactionData, depositData)
-        }
-
-        // Send a success response to acknowledge the webhook
-        res.status(200).send('Webhook received and processed');
-    } catch (error) {
-        console.error('Error processing payment:', error);
-        res.status(500).send('Internal Server Error');
-    }
-};
-
-const processDeposit = async (account, txnData, deposit) => {
-    const accountData = getAccount(account);
-    const transactionData = {
-        ...txnData,
-        balanceBefore: userData.balance,
-    };
-
-    if (!accountData) {
-        res.status(404).json({ error: { message: 'account not found' } });
-    }
-
-    const transaction = await createTransaction({
-        userId: accountData.userId,
-        ...transactionData
-    });
-
-    const depositData = {
-        transactionId: transaction.id.toString(),
-        ...deposit
-    };
-    const transfer = await Deposit.query().insert(depositData);
-    return { transaction, transfer };
-}
 
 const verifyTransactionPin = async (userId, transactionPin) => {
     const user = await getUserById(userId)
@@ -136,10 +67,5 @@ const verifyTransactionPin = async (userId, transactionPin) => {
     return Crypto.compareStrings(user.transactionPin, transactionPin);
 }
 
-const validateSignature = async (secret) => {
-    if (WEGHOOK_SECRET !== secret) {
-        return false;
-    }
-    return true;
-}
-module.exports = { createTransfer, receiveFunds, };
+
+module.exports = { createTransfer, };

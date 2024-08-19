@@ -16,7 +16,6 @@ async function authorize(req, res, next) {
 
     try {
         const decodedToken = await verifyToken(token); 
-        console.log('tokssssss:', decodedToken)
         
         const userId = decodedToken.userId; 
         const user = await User.query().findById(userId); 
