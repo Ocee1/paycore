@@ -13,10 +13,10 @@ class Transaction extends Model {
 
       properties: {
         id: { type: 'integer' },
-        senderId: { type: 'string' },
+        userId: { type: 'string' },
         status: { type: 'integer', enum: [ 0, 1, 2, 3] },
-        amount: { type: 'string' },
-        transactionType: { type: 'string', enum: ['credit', 'debit'] },
+        amount: { type: 'number' },
+        transactionType: { type: 'string' },
         narration: { type: ['string',] },
         balanceBefore: { type: ['string',] },
         balanceAfter: { type: ['string',] },

@@ -7,7 +7,6 @@ exports.up = function(knex) {
       table.increments('id').primary(); 
       table.string('session_id').notNullable(); 
       table.text('meta_data').notNullable(); 
-      table.timestamp('expiresAt'); 
       table.timestamp('createdAt', { precision: 6 }).defaultTo(knex.fn.now(6)); 
       table.timestamp('updatedAt', { precision: 6 }).defaultTo(knex.fn.now(6)); 
     });

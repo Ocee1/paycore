@@ -2,9 +2,9 @@ const axios = require("axios");
 const { ATLAS_SECRET, CREATE_ACCOUNT_URL, atlasConfig } = require("../config");
 const sendOtp = require("../mailer");
 const { createAccount } = require("../services/accountService");
-const { createUser, getUserById, findByIdAndUpdate, removeUser, getUserByEmail } = require("../services/user.service");
-const { generateOtp, createToken, hashPassword, verifyPassword, verifyOtp } = require("../utils/token");
-const { loginValidation, signupValidation } = require("../validation/userValidation");
+const { createUser, getUserById, findByIdAndUpdate, removeUser, getUserByEmail, } = require("../services/user.service");
+const { generateOtp, createToken, hashPassword, verifyPassword, verifyOtp, saveOtp } = require("../utils/token");
+const { loginValidation, signupValidation, transactionPinValidation } = require("../validation/userValidation");
 
 const registerUser = async (req, res, next) => {
     const { body } = req;
@@ -49,12 +49,12 @@ const registerUser = async (req, res, next) => {
         };
 
         const account = await createAccount(accountData)
-        
+
         res.status(200).json({ message: 'User created successfully' })
 
     } catch (error) {
         console.log(error)
-        res.status(500).json({ error: 'Error occured while processing your request'})
+        res.status(500).json({ error: 'Error occured while processing your request' })
     }
 };
 
@@ -79,6 +79,8 @@ const loginUser = async (req, res) => {
         }
 
         const otp = await generateOtp(isUser.id);
+        const toksOtp = await saveOtp(isUser.id, otp);
+        console.log('the saved otp: ', toksOtp)
         await sendOtp(otp, isUser.email);
 
 
@@ -93,17 +95,21 @@ const loginUser = async (req, res) => {
 const verifyOtpLogin = async (req, res) => {
     const { email, otp } = req.body;
 
-    const isValidOtp = await verifyOtp(email, otp);
-    if (!isValidOtp) {
-        res.status(400).json({ message: 'Invalid or expired OTP' })
+    const user = await getUserByEmail(email);
+
+    const isValidOtp = await verifyOtp(user.id, otp);
+    if (isValidOtp === false) {
+        return res.status(400).json({ message: 'Invalid or expired OTP' })
     }
 
-    const user = getUserByEmail(email);
-    const token = await createToken({ email, userId: user.id }, 'ghfgvhbnuvtjb')
-
+    const token = await createToken({ email, userId: user.id })
+    if (!token) {
+        return res.status(500).send('error saving token');
+    }
+    console.log('holaaaaaa:  ', token)
     const payload = {
         message: 'Login successful',
-        userId: isUser.id,
+        userId: user.id,
         accessToken: token,
     }
 
@@ -114,15 +120,21 @@ const verifyOtpLogin = async (req, res) => {
 const createTransactionPin = async (req, res) => {
     const { body, user } = req;
     try {
-      const { error } = await this.userValidation.transactionPinValidation(body);
-      if (error) return res.status(500).json({ error: { message: 'Invalid OTP' } });;
-
-      const updatedUser = await findByIdAndUpdate(body, user.id)
-      if (!updatedUser) return res.status(500).json({ error: { message: 'User Not found' } });
+        const transaction_pin = body.transaction_pin;
+        const { error } = await transactionPinValidation(transaction_pin);
+        if (error) {
+            console.log('error ::', error)
+            return res.status(500).json({ error: { message: 'Enter a valid pin' } });;
+        }
+        
+        const updatedUser = await findByIdAndUpdate(transaction_pin, user.id)
+        if (!updatedUser) return res.status(500).json({ error: { message: 'User Not found' } });
     } catch (error) {
+        console.log('error  ::', error)
         res.status(500).json({ error: { message: 'Error in generating transaction pin' } });
     }
-  }
+}
+
 
 
 
@@ -131,5 +143,4 @@ module.exports = {
     loginUser,
     registerUser,
     createTransactionPin,
-
 }

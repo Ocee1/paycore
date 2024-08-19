@@ -1,4 +1,7 @@
+const Otp = require("../models/otp");
+const Token = require("../models/token");
 const User = require("../models/user");
+const moment = require("moment")
 
 
 
@@ -14,6 +17,7 @@ const getUserById = async (id) => {
 
 const getUserByEmail = async (email) => {
     const user = (await User.query().where({ email }).first());
+    console.log(`let me see that issue here too o: ${user}`)
     return user;
 };
 
@@ -27,10 +31,38 @@ const removeUser = async (id) => {
     return user;
 };
 
+const saveToken = async (userId, token) => {
+
+
+    const expiresAt = moment().add(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+
+    const authToken = await Token.query().insert({
+        userId,
+        token,
+        expires_at: expiresAt
+    });
+    return authToken;
+}
+ const getToken = async (token) => {
+    const savedToken = await Token.query().findOne({ token });
+    return savedToken;
+ }
+
+ const getOtp = async (userId, otp) => {
+    const otpRecord = await Otp.query().findOne({
+        userId,
+        otp
+    })
+    return otpRecord;
+ }
+
 module.exports = {
     createUser,
     getUserById,
     getUserByEmail,
     findByIdAndUpdate,
     removeUser,
+    saveToken,
+    getToken,
+    getOtp
 };

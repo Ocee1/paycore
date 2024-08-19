@@ -13,10 +13,10 @@ class Transfer extends Model {
       type: 'object',
       required: ['senderId', 'status', 'transactionType', 'amount'],
       properties: {
-        id: { type: 'integer' }, // Changed to 'integer'
+        id: { type: 'integer' }, 
         transactionId: { type: 'integer' }, 
         status: { type: 'integer', enum: [ 0, 1, 2, 3] },
-        amount: { type: 'string' },
+        amount: { type: 'number' },
         bank: { type: 'string' },
         bank_code: { type: 'string' },
         account_number: { type: 'string' },

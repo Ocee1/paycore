@@ -13,7 +13,7 @@ class Account extends Model {
       properties: {
         id: { type: 'integer' },
         userId: { type: 'integer' },
-        balance: { type: 'integer' },
+        balance: { type: 'number' },
         bank: { type: 'string' },
         account_number: { type: 'string' },
         account_name: {type: 'string'},

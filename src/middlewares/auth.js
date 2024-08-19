@@ -4,6 +4,7 @@ const { verifyToken } = require('../utils/token');
 
 async function authorize(req, res, next) {
     const token = req.header('Authorization')?.replace('Bearer ', '');
+    
 
     if (!token) {
         return res.status(403).send({ error: 'Unauthorized User' });
@@ -15,8 +16,9 @@ async function authorize(req, res, next) {
 
     try {
         const decodedToken = await verifyToken(token); 
+        console.log('tokssssss:', decodedToken)
         
-        const userId = decodedToken.id; 
+        const userId = decodedToken.userId; 
         const user = await User.query().findById(userId); 
         
         if (!user) {
@@ -31,7 +33,8 @@ async function authorize(req, res, next) {
         if (errors.includes(e?.name)) {
             return res.status(403).send({ error: e.message });
         }
-        return res.status(403).json({ error: 'User unauthorized' });
+        console.log({error: e })
+        return res.status(403).json({ error: 'User unauthorized!!!' });
     }
 }
 

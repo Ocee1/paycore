@@ -6,6 +6,7 @@ const { createTransaction, getWebhook } = require("../services/transactionServic
 const { getAccount } = require("../services/accountService");
 const axios = require("axios");
 const { createWebhook } = require("../services/webHook");
+const Deposit = require("../models/deposit");
 
 
 const createTransfer = async (req, res) => {
@@ -27,11 +28,11 @@ const createTransfer = async (req, res) => {
         if (accountInfo.data.status !== 'success') return res.status(400).json({ error: { message: "Account not found" } });
 
         const data = {
-            senderId: user.id,
+            userId: user.id,
             transactionType,
             amount,
             description: narration,
-            status: 'pending',
+            status: '0',
             balanceBefore: balance,
         };
 
@@ -50,7 +51,7 @@ const createTransfer = async (req, res) => {
 
         const transfer = await Transfer.query().insert(payload);
 
-        response.created(res, 'Transaction created successfully');
+        res.status(200).json({ error: 'Your request is processing' });
     } catch (error) {
         res.status(500).json({ error: 'Error occured while processing your request' })
     }
@@ -69,8 +70,7 @@ const receiveFunds = async (req, res) => {
         return res.status(200).send('Processing transaction');
     }
 
-
-    const { type, source, secret, session_id, account_number, amount } = req.body;
+    const { type, source, session_id, account_number, amount } = req.body;
 
     const webPayload = {
         session_id,
@@ -80,7 +80,6 @@ const receiveFunds = async (req, res) => {
     const hook = await createWebhook(webPayload);
 
     const transactionData = {
-        senderId: user.id,
         transactionType: type,
         amount,
         narration,
@@ -88,20 +87,13 @@ const receiveFunds = async (req, res) => {
         balanceBefore: balance,
     }
 
-    const transferData = {
-        amount,
-        bank: accountInfo.data.data.bank,
-        bank_code,
-        account_number,
-        account_name: accountInfo.data.data.account_name,
-        narration,
-        status: 0,
-        reference,
-        transactionType
+    await delete payload.secret;
+    const depositData = {
+        ...payload
     }
     try {
         if (payload.type === 'collection') {
-            const transfer = await processTransfer(account_number, transactionData, transferData)
+            const transfer = await processDeposit(account_number, transactionData, depositData)
         }
 
         // Send a success response to acknowledge the webhook
@@ -112,7 +104,7 @@ const receiveFunds = async (req, res) => {
     }
 };
 
-const processTransfer = async (account, txnData, trfData) => {
+const processDeposit = async (account, txnData, deposit) => {
     const accountData = getAccount(account);
     const transactionData = {
         ...txnData,
@@ -123,13 +115,16 @@ const processTransfer = async (account, txnData, trfData) => {
         res.status(404).json({ error: { message: 'account not found' } });
     }
 
-    const transaction = await createTransaction(transactionData);
+    const transaction = await createTransaction({
+        userId: accountData.userId,
+        ...transactionData
+    });
 
-    const transferData = {
+    const depositData = {
         transactionId: transaction.id.toString(),
-        ...trfData
+        ...deposit
     };
-    const transfer = await Transfer.query().insert(transferData);
+    const transfer = await Deposit.query().insert(depositData);
     return { transaction, transfer };
 }
 

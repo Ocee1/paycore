@@ -26,6 +26,7 @@ const MAIL_PORT = process.env.MAIL_PORT;
 const MAIL_HOST = process.env.MAIL_HOST;
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
+const AUTH_SECRET = process.env.AUTH_SECRET;
 
 const atlasConfig = (data, reqUrl, method, secret) => {
   const accountData = qs.stringify(data);
@@ -69,5 +70,6 @@ module.exports = {
   atlasConfig,
   corsOptions,
   WEBHOOK_SECRET,
-  WEBHOOK_URL
+  WEBHOOK_URL,
+  AUTH_SECRET
 }
