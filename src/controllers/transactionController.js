@@ -12,8 +12,11 @@ const createTransfer = async (req, res) => {
     const { amount, transactionType, transactionPin, account_number, bank_code, narration, reference } = body;
 
     try {
-        const { error } = validate.validateTransaction(body);
-        if (error) return res.status(400).json({ error: 'Bad request' });
+        // const { error } = validate(body);
+        // if (error) {
+        //     console.log(error)
+        //     return res.status(400).json({ error: 'Bad request' });
+        // }
 
         const verifyPin = await verifyTransactionPin(user.id, transactionPin);
         if (!verifyPin) return res.status(400).json({ error: { message: "Incorrect transaction pin" } });
@@ -51,6 +54,7 @@ const createTransfer = async (req, res) => {
 
         res.status(200).json({ error: 'Your request is processing' });
     } catch (error) {
+        console.log(error)
         res.status(500).json({ error: 'Error occured while processing your request' })
     }
 };

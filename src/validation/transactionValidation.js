@@ -1,10 +1,12 @@
+const Joi = require('joi');
+
 const validateTransaction = (data) => {
     const schema = Joi.object({
         amount: Joi.number().required().positive(),
-        transaction_type: Joi.string().valid('credit', 'debit').required(),
+        transaction_type: Joi.string().required(),
         description: Joi.string().max(500).optional(),
-        senderId: Joi.string().required(),
-        receiverId: Joi.string().required(),
+        account_number: Joi.string().required(),
+        amount: Joi.number().required(),
 
     });
     return schema.validate(data);

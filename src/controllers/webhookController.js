@@ -1,9 +1,11 @@
+const { WEBHOOK_SECRET } = require('../config');
 const { sendCreditMail } = require('../mailer');
 const { getAccount, updateByAccount } = require('../services/accountService');
 const { getDepositBySessionId } = require('../services/depositService');
 const { createTransaction } = require('../services/transactionService');
 const { getUserByEmail, getUserById } = require('../services/user.service');
 const { updateWebhook, getWebhook, createWebhook } = require('../services/webHook');
+
 
 const setWebhookLink = async (req, res) => {
     try {
@@ -20,7 +22,7 @@ const setWebhookLink = async (req, res) => {
 const webhooks = async (req, res) => {
     const payload = req.body;
 
-    const isExisting = await getWebhook(payload.session_id)
+    const isExisting = await getWebhook(payload.type)
     if (isExisting) {
         return res.status(200).send('Processing transaction');
     }
@@ -68,6 +70,7 @@ const processDeposit = async (payload) => {
             source
         };
 
+        const newBalance = accountData.balance + payload.amount;
         const transactionData = {
             transactionType: type,
             userId,
@@ -75,15 +78,12 @@ const processDeposit = async (payload) => {
             narration,
             status: 0,
             balanceBefore: accountData.balance,
+            balanceAfter: newBalance
         };
 
-        if (!accountData) {
-            res.status(404).json({ error: { message: 'account not found' } });
-        }
-
-        const newBalance = accountData.balance + payload.amount;
-        const txn = await createTransaction(transactionData);
         const updateBalance = await updateByAccount(payload.account, newBalance);
+        const txn = await createTransaction(transactionData);
+        
         const logDeposit = await Deposit.query().insert(depositData);
 
         await sendCreditMail(user.email, payload);
@@ -94,7 +94,7 @@ const processDeposit = async (payload) => {
 };
 
 const validateSignature = async (secret) => {
-    if (WEGHOOK_SECRET !== secret) {
+    if (WEBHOOK_SECRET !== secret) {
         return false;
     }
     return true;
