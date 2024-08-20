@@ -1,5 +1,6 @@
 const { WEBHOOK_SECRET } = require('../config');
 const { sendCreditMail } = require('../mailer');
+const Deposit = require('../models/deposit');
 const { getAccount, updateByAccount } = require('../services/accountService');
 const { getDepositBySessionId } = require('../services/depositService');
 const { createTransaction } = require('../services/transactionService');
@@ -22,13 +23,8 @@ const setWebhookLink = async (req, res) => {
 const webhooks = async (req, res) => {
     const payload = req.body;
 
-    const isExisting = await getWebhook(payload.type)
-    if (isExisting) {
-        return res.status(200).send('Processing transaction');
-    }
-
     const webPayload = {
-        type,
+        type: payload.type,
         meta_data: payload
     }
     const hook = await createWebhook(webPayload);
@@ -57,31 +53,35 @@ const processDeposit = async (payload) => {
             return res.status(400).json({error: { message: 'Duplicate transaction'}});
         }
 
-        const accountData = getAccount(payload.account);
+        const accountData = await getAccount(payload.account_number);
         const userId = accountData.userId;
+    
         const user = await getUserById(userId);
         const depositData = {
-            type,
-            amount,
-            session_id,
+            type: payload.type,
+            amount: payload.amount,
+            session_id: payload.session_id,
             userId,
-            status: 0,
-            account_number,
-            source
+            status: 3,
+            account_number: payload.account_number,
+            source: payload.source
         };
 
-        const newBalance = accountData.balance + payload.amount;
+        const newBalance = ~~accountData.balance + ~~payload.amount;
+        const balanceAfter = String(newBalance);
+        const balanceBefore = String(accountData.balance);
         const transactionData = {
-            transactionType: type,
-            userId,
-            amount,
-            narration,
-            status: 0,
-            balanceBefore: accountData.balance,
-            balanceAfter: newBalance
+            transactionType: payload.type,
+            userId: String(userId),
+            amount: payload.amount,
+            narration: payload.source.narration,
+            status: 3,
+            balanceBefore,
+            balanceAfter
         };
+        console.log('loooooooo:  ', transactionData)
 
-        const updateBalance = await updateByAccount(payload.account, newBalance);
+        const updateBalance = await updateByAccount(payload.account_number, newBalance);
         const txn = await createTransaction(transactionData);
         
         const logDeposit = await Deposit.query().insert(depositData);

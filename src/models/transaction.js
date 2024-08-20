@@ -1,5 +1,6 @@
 const { Model } = require('objection');
 const User = require('./user');
+const moment = require('moment');
 
 class Transaction extends Model {
   static get tableName() {
@@ -9,7 +10,7 @@ class Transaction extends Model {
   static get jsonSchema() {
     return {
       type: 'object',
-      required: ['senderId', 'status', 'transactionType', 'amount'],
+      required: ['status', 'transactionType', 'amount'],
 
       properties: {
         id: { type: 'integer' },
@@ -41,13 +42,13 @@ class Transaction extends Model {
   }
 
   $beforeInsert() {
-    const now = new Date().toISOString();
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
     this.createdAt = now;
     this.updatedAt = now;
   }
 
   $beforeUpdate() {
-    this.updatedAt = new Date().toISOString();
+    this.updatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
   }
 }
 

@@ -1,4 +1,5 @@
 const { Model } = require("objection");
+const User = require("./user");
 
 class Deposit extends Model {
     static get tableName() {
@@ -9,11 +10,11 @@ class Deposit extends Model {
         return {
             type: 'object',
             required: [],
-            preperties: {
+            properties: {
                 id: { type: 'integer' },
                 type: { type: 'string' },
                 amount: { type: 'number' },
-                session_id: { type: 'integer' },
+                session_id: { type: 'string' },
                 userId: { type: 'integer' },
                 status: { type: 'integer', enum: [ 0, 1, 2, 3] },
                 account_number: { type: 'string' },
@@ -27,7 +28,7 @@ class Deposit extends Model {
                         narration: { type: 'string' },
                         bank: { type: 'string' },
                         bank_code: { type: 'string' },
-                        createdAt: { type: 'string', format: 'date-time' } 
+                        createdAt: { type: 'string' } 
                     }
                 },
             }

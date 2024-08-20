@@ -12,8 +12,8 @@ class Webhook extends Model{
       properties: {
         id: { type: 'integer' },
         type: { type: 'string' },
-        createdAt: { type: 'datetime' },
-        updatedAt: { type: 'datetime' }
+        created_at: { type: 'string', format: 'date-time' },
+        updated_at: { type: 'string', format: 'date-time' },
       }
     };
   }
