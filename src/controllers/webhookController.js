@@ -50,7 +50,7 @@ const processDeposit = async (payload) => {
     try {
         const existingDeposit = await getDepositBySessionId(payload.session_id);
         if (existingDeposit) {
-            return res.status(400).json({error: { message: 'Duplicate transaction'}});
+            return 'Duplicate transaction';
         }
 
         const accountData = await getAccount(payload.account_number);
