@@ -8,7 +8,7 @@ const axios = require('axios');
 const { findAccountByIdAndUpdate, getAccount, updateByAccount } = require('../services/accountService');
 const Transaction = require('../models/transaction');
 const Transfer = require('../models/transfer');
-const { getTransferById, getTransferByTxnId, findTransferByIdAndUpdate, getPendingTransfers } = require('../services/transferService');
+const { getTransferById, getTransferByTxnId, findTransferByIdAndUpdate, getPendingTransfers, updateTransferByRef } = require('../services/transferService');
 const { findTransactionByIdAndUpdate } = require('../services/transactionService');
 
 
@@ -23,7 +23,7 @@ cron.schedule('* * * * *', async () => {
     // Selecting a pending transfer with status 0
     const pendingTransfers = await getPendingTransfers();
     if (!pendingTransfers || pendingTransfers == []) {
-      return 'No pending Txns'
+      console.log('No pending Txns');
     }
 
     for (const transfer of pendingTransfers) {
@@ -71,11 +71,15 @@ cron.schedule('* * * * *', async () => {
         type,
         amount,
         narration,
-        status: 0,
+        status: 1,
+        fee: transfer.fee,
         balanceBefore: String(senderAccount.balance),
       };
 
       const transaction = await createTransaction(trxData);
+      if (!transaction) {
+        return 
+      }
 
       //send transfer to atlas
       const accountRes = await axios(atlasConfig(data, CREATE_TRANSFER_URL, 'post', ATLAS_SECRET));
@@ -88,15 +92,9 @@ cron.schedule('* * * * *', async () => {
 
       //if response from atlas is success, u can update transfer db with the atlas reference returned
       const data = {
-        amount: transfer.amount,
-        bank: transfer.bank,
-        bank_code: transfer.bank_code,
-        account_number: transfer.account_number,
-        account_name: transfer.account_name,
-        narration: transfer.narration,
-        trx_ref: transfer.reference,
+        payment_gateway_ref: accountRes.data.trx_ref,
       };
-      await Transaction.query().patch({ status: 3 }).where({ id: transfer.transactionId });
+      await updateTransferByRef(trx_ref, data);
 
       console.log(`Processing transaction \nID: ${transaction.id}`);
     }

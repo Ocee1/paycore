@@ -9,11 +9,11 @@ const Transfer = require("../models/transfer");
 const { generateReference } = require("../utils/token");
 
 
-
 const createTransfer = async (req, res) => {
     const { body, user } = req;
-    const { amount, type, transactionPin, account_number, bank, bank_code, narration, currency} = body;
-
+    const { amount, type, transactionPin, account_number, bank, bank_code, narration, currency} = req.body;
+    console.log('----------', req.body)
+    
     try {
         //data => amount, bank_code, bank_name, account_number, account_name, narrations, currency
         //validate the data above
