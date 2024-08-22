@@ -29,7 +29,7 @@ const getAccountByEmail = async (email) => {
 const updateByAccount = async (account_number, data) => {
     const result = await Account.query().where('account_number', account_number).patch({ balance: data });
     return result;
-}
+};
 
 const findAccountByIdAndUpdate = async (data, id) => {
     const account = await Account.query().patchAndFetchById(id, data);

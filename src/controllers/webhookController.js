@@ -3,7 +3,8 @@ const { sendCreditMail } = require('../mailer');
 const Deposit = require('../models/deposit');
 const { getAccount, updateByAccount } = require('../services/accountService');
 const { getDepositBySessionId } = require('../services/depositService');
-const { createTransaction } = require('../services/transactionService');
+const { createTransaction, updateTransactionByRef } = require('../services/transactionService');
+const { findTransferByIdAndUpdate, updateTransferByRef, updatePendingTrfByRef } = require('../services/transferService');
 const { getUserByEmail, getUserById } = require('../services/user.service');
 const { updateWebhook, getWebhook, createWebhook } = require('../services/webHook');
 
@@ -22,12 +23,21 @@ const setWebhookLink = async (req, res) => {
 
 const webhooks = async (req, res) => {
     const payload = req.body;
+    let type;
+    let secret;
 
+    if (payload.type && payload.secret) {
+        type = payload.type;
+        secret = payload.secret;
+    }
+    type = payload.meta.type;
+    secret = payload.meta;
     const webPayload = {
         type: payload.type,
         meta_data: payload
     }
     const hook = await createWebhook(webPayload);
+    secret = payload.secret || payload.meta.secret;
 
     const isValidRequest = validateSignature(payload.secret);
     if (!isValidRequest) {
@@ -40,7 +50,10 @@ const webhooks = async (req, res) => {
     });
 
     if (payload.type === 'collection') {
-        const deposit = await processDeposit(payload)
+        const trfHook = await processTransferHook(payload)
+    }
+    if (type === 'transfer') {
+        await processReversal(payload);
     }
 
 };
@@ -91,6 +104,25 @@ const processDeposit = async (payload) => {
         console.log('error: ', error)
         return false;
     }
+};
+
+//Webhook (the webhook for transfer gives you the final result of the transfer)
+const processTransferHook = async (payload) => {
+    let status;
+    if (payload.status) {
+        status = payload.status;
+    }
+    status = payload.meta.status;
+    if (status === 'failed') {
+        const { merchant_ref, meta } = payload;
+    const { account_name, account_bank, account_number, narration, currency, amount, trx_ref, secret, status, type } = meta;
+        await updatePendingTrfByRef(merchant_ref, { status: 11 });
+        await updateTransactionByRef(merchant_ref, { status: 11 });
+    }
+
+    await updatePendingTrfByRef(merchant_ref, { status: 3 });
+    await updateTransactionByRef(merchant_ref, { status: 3 });
+
 };
 
 const validateSignature = async (secret) => {

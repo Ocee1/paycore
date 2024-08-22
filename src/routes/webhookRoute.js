@@ -8,9 +8,7 @@ const { setWebhookLink, webhooks } = require('../controllers/webhookController')
 const hookRouter = express.Router();
 
 hookRouter.post('/receive/webhook', setWebhookLink);
-hookRouter.post('/webhook', Auth.authorize, webhooks);
-
-
+hookRouter.post('/webhook', webhooks);
 
 
 module.exports = { hookRouter };

@@ -10,15 +10,17 @@ class Transaction extends Model {
   static get jsonSchema() {
     return {
       type: 'object',
-      required: ['status', 'transactionType', 'amount'],
+      required: ['status', 'type', 'amount'],
 
       properties: {
         id: { type: 'integer' },
         userId: { type: 'string' },
         status: { type: 'integer', enum: [ 0, 1, 2, 3] },
         amount: { type: 'number' },
-        transactionType: { type: 'string' },
-        narration: { type: ['string',] },
+        type: { type: 'string' },
+        trx_ref: { type: 'integer' },
+        payment_gateway_ref: { type: 'integer' },
+        fee: { type: 'number' },
         balanceBefore: { type: ['string',] },
         balanceAfter: { type: ['string',] },
         deleted_at: { type: 'string', format: 'date-time' },

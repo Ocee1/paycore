@@ -22,12 +22,31 @@ const findTransactionByIdAndUpdate = async (data, id) => {
     return user;
 };
 
+const updateTransactionByRef = async (trx_ref, data) => {
+    const result = await Account.query().where('trx_rf', trx_ref).patch(data);
+    return result;
+};
+
 const removeTransaction = async (id) => {
     const user = await Transaction.query().deleteById(+id);
     return user;
 };
 
+const getFailedTransactions = async (status, type) => {
+    await Transaction.query().where({
+        status,
+        type
+    })
+};
 
+const updatePendingTrxByRef = async (trx_ref, data) => {
+    const result = await Transaction.query()
+    .where('trx_ref', trx_ref)
+    .andWhere('status', 1)
+    .patch(data);
+
+    return result;
+}
 
 
 module.exports = {
@@ -36,4 +55,7 @@ module.exports = {
     getTransactionByEmail,
     findTransactionByIdAndUpdate,
     removeTransaction,
+    getFailedTransactions,
+    updateTransactionByRef,
+    updatePendingTrxByRef
 }

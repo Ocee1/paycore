@@ -23,7 +23,7 @@ const createToken = async (payload) => {
     return token;
 }
 
-const verifyToken = async (token)=> {
+const verifyToken = async (token) => {
     const [base64Payload, receivedSignature] = token.split('.');
 
     const expectedSignature = crypto.createHmac('sha256', AUTH_SECRET).update(base64Payload).digest('hex');
@@ -44,7 +44,7 @@ const verifyToken = async (token)=> {
 const generateOtp = async (userId) => {
     const otp = Math.floor(100000 + Math.random() * 900000);
     const expiresAt = moment().add(5, 'minutes').toISOString().slice(0, 19).replace('T', ' ');
-    
+
 
     await Otp.query().insert({
         userId,
@@ -56,7 +56,7 @@ const generateOtp = async (userId) => {
 };
 
 const verifyOtp = async (userId, otp) => {
-    
+
     const result = await getOtp(userId, otp);
     if (!result) return false;
 
@@ -64,7 +64,7 @@ const verifyOtp = async (userId, otp) => {
     const expiresAtMoment = moment(result.expiresAt, 'YYYY-MM-DD HH:mm:ss')
     const convertedDatetime = momentZone.utc(result.expiresAt).tz('Africa/Johannesburg').format('YYYY-MM-DD HH:mm:ss');
 
-    if ( moment(convertedDatetime).isBefore(moment())) {
+    if (moment(convertedDatetime).isBefore(moment())) {
         return false;
     }
 
@@ -89,7 +89,7 @@ const verifyPassword = (password, hash) => {
 }
 
 const saveOtp = async (userId, otp) => {
-    
+
 
     const expiresAt = moment().add(5, 'minutes').format('YYYY-MM-DD HH:mm:ss');
 
@@ -97,4 +97,13 @@ const saveOtp = async (userId, otp) => {
     return userOtp;
 }
 
-module.exports = { createToken, verifyToken, generateOtp, verifyOtp, hashPassword, verifyPassword, saveOtp }
+function generateReference() {
+    let code = '';
+    let possible = '0123456789';
+    for (let i = 0; i < 16; i++) {
+        code += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return code;
+}
+
+module.exports = { createToken, verifyToken, generateOtp, verifyOtp, hashPassword, verifyPassword, saveOtp, generateReference }

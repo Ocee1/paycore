@@ -50,10 +50,30 @@ const sendCreditMail = async (email, payload) => {
     console.log('Email sent: ' + info.response);
   });
 
-  return 'OTP sent successfully';
+  return 'Credit alert sent successfully';
+};
+
+const reversalMail = async (email, payload) => {
+  const mailOptions = {
+    from: 'otp@example.com',
+    to: email,
+    subject: 'Paycore - Reversal Alert',
+    text: `This is to notify you that a reversal occurred on your account with us. Please review the details below: \nAccount: ${payload.account_number} \nAmount: ${payload.amount}`
+  };
+
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.log(error);
+    }
+    console.log('Email sent: ' + info.response);
+  });
+
+  return 'Reversal mail sent successfully';
 };
 
 module.exports = {
   sendOtp,
-  sendCreditMail
+  sendCreditMail,
+  reversalMail
 }

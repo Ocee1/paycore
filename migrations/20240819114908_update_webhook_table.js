@@ -17,3 +17,5 @@ exports.down = function (knex) {
         table.renameColumn('type', 'session_id');
     })
 };
+
+
