@@ -25,7 +25,6 @@ async function authorize(req, res, next) {
         }
 
         req.user = user; 
-        console.log('-------', req.user.id)
         next();
 
     } catch (e) {

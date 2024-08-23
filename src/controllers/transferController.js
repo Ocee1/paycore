@@ -1,23 +1,21 @@
 const { GET_ACCOUNT_URL, ATLAS_SECRET, atlasConfig } = require("../config");
 const validate = require("../validation/transactionValidation");
 const { getUserById, } = require("../services/user.service");
-const Transaction = require("../models/transaction");
-const { createTransaction, } = require("../services/transactionService");
 const axios = require("axios");
 const { getAccountByUserId } = require("../services/accountService");
-const Transfer = require("../models/transfer");
 const { generateReference } = require("../utils/token");
+const { createTrf } = require("../services/transferService");
 
 
-const createTransfer = async (req, res) => {
-    const { body, user } = req;
-    const { amount, type, transactionPin, account_number, bank, bank_code, narration, currency} = req.body;
-    console.log('----------', req.body)
+const createTransfer = async (req, res, next) => {
+    const { amount, transactionPin, account_number, bank, bank_code, narration, currency} = req.body;
+    const user = req.user;
+
     
     try {
         //data => amount, bank_code, bank_name, account_number, account_name, narrations, currency
         //validate the data above
-        const { error } = validate(body);
+        const { error } = validate(req.body);
         if (error) {
             console.log(error)
             return res.status(400).json({ error: 'Bad request' });
@@ -56,7 +54,7 @@ const createTransfer = async (req, res) => {
         //save the transfer on the transfer table, with status 0
 
         const payload = {
-            trx_ref: trx_ref,
+            trx_ref: ~~trx_ref,
             userId: String(user.id),
             status: 0,
             amount: amount,
@@ -67,7 +65,7 @@ const createTransfer = async (req, res) => {
             narration: narration,
         };
 
-        const transfer = await createTransfer(payload);
+        const transfer = await createTrf(payload);
 
         res.status(200).json({ error: 'Your request is processing' });
     } catch (error) {
@@ -88,7 +86,7 @@ const verifyTransactionPin = async (userId, transactionPin) => {
 
 
 
-module.exports = { createTransfer, };
+module.exports = { createTransfer };
 
 
 //fetch deposit endpoints for a logged in user

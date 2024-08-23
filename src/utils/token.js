@@ -5,6 +5,7 @@ const Token = require('../models/token');
 const { saveToken, getToken, getOtp } = require('../services/user.service');
 const { AUTH_SECRET } = require('../config');
 const momentZone = require("moment-timezone");
+const { use } = require('../routes/transactionRoutes');
 
 
 
@@ -28,15 +29,21 @@ const verifyToken = async (token) => {
 
     const expectedSignature = crypto.createHmac('sha256', AUTH_SECRET).update(base64Payload).digest('hex');
     if (expectedSignature !== receivedSignature) {
-        return 'Invalid token eh';
+        return 'Invalid token';
     }
 
     const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
 
     const userToken = await getToken(token);
+    if (!userToken) {
+        throw new Error('User ID is missing in the token');
+    }
 
-    if (userToken.token !== token) {
-        return 'Invalid token no';
+    const expiresAtMoment = moment(userToken.expiresAt, 'YYYY-MM-DD HH:mm:ss')
+    const convertedDatetime = momentZone.utc(userToken.expiresAt).tz('Africa/Johannesburg').format('YYYY-MM-DD HH:mm:ss');
+
+    if (moment(convertedDatetime).isBefore(moment()) || userToken.token !== token) {
+        return false;
     }
     return payload;
 }

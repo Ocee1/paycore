@@ -49,6 +49,12 @@ const corsOptions = {
   credentials: true,
 };
 
+const transactionFees = {
+  '50001': 53.75,
+  '0_5000': 10.75,
+  '5001_50000': 26.88
+};
+
 const getTransactionFee = (amount) => {
   if (amount > 50000) {
       return transactionFees["50001"];

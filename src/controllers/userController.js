@@ -8,6 +8,8 @@ const { loginValidation, signupValidation, transactionPinValidation } = require(
 const Account = require("../models/account");
 
 const registerUser = async (req, res, next) => {
+    console.log('Request Body:', req.body);
+    console.log('Stack Trace:', new Error().stack);
     const { body } = req;
 
     try {
@@ -59,7 +61,7 @@ const registerUser = async (req, res, next) => {
 };
 
 const loginUser = async (req, res) => {
-
+    
     const { body } = req;
 
     try {

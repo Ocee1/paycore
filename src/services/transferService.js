@@ -2,7 +2,7 @@ const Transfer = require("../models/transfer");
 
 
 
-const createTransfer = async (data) => {
+const createTrf = async (data) => {
     const result = await Transfer.query().insert(data);
     return result;
 };
@@ -48,7 +48,7 @@ const updatePendingTrfByRef = async (trx_ref, data) => {
 
 
 module.exports = {
-    createTransfer,
+    createTrf,
     getTransferByEmail,
     getTransferById,
     findTransferByIdAndUpdate,

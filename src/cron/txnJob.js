@@ -5,7 +5,7 @@ const Knex = require('knex');
 const User = require('../models/user');
 const { ATLAS_SECRET, atlasConfig, CREATE_TRANSFER_URL, getTransactionFee } = require('../config/index');
 const axios = require('axios');
-const { findAccountByIdAndUpdate, getAccount, updateByAccount } = require('../services/accountService');
+const { findAccountByIdAndUpdate, getAccount, updateByAccount, getAccountByUserId } = require('../services/accountService');
 const Transaction = require('../models/transaction');
 const Transfer = require('../models/transfer');
 const { getTransferById, getTransferByTxnId, findTransferByIdAndUpdate, getPendingTransfers, updateTransferByRef } = require('../services/transferService');
@@ -34,12 +34,12 @@ cron.schedule('* * * * *', async () => {
       await findTransferByIdAndUpdate({ status: 1 }, transfer.id);
 
       //select the account details and get the current user balance
-      const txnAccount = await getAccount(transfer.account_number);
+      const txnAccount = await getAccountByUserId(transfer.userId);
       if (!txnAccount) {
         console.log({
           "status": "error",
-          "message": "Account not found"
-        }) 
+          "message": "Account not found",
+        })
       }
       //get the transfer fee
       const fee = getTransactionFee(txnAccount.balance);
@@ -47,7 +47,7 @@ cron.schedule('* * * * *', async () => {
       //check to make sure the user balance can carry the transfer (add the transfer and transfer fee, then check if the user balance is the gotten sum)
 
       const currentBalance = txnAccount.balance;
-      const totalDebit = amount + fee;
+      const totalDebit = transfer.amount + fee;
       if (currentBalance < totalDebit) {
         console.log({
           "status": "error",
@@ -68,17 +68,27 @@ cron.schedule('* * * * *', async () => {
       //Create a transaction for the deduction, also take note of the transfer fee
       const trxData = {
         userId: String(user.id),
-        type,
-        amount,
-        narration,
+        type: transfer.type,
+        amount: transfer.amount,
+        narration: transfer.narration,
         status: 1,
-        fee: transfer.fee,
+        fee: fee,
         balanceBefore: String(senderAccount.balance),
       };
 
       const transaction = await createTransaction(trxData);
       if (!transaction) {
-        return 
+        console.log('error ceating trx')
+      }
+
+      const data = {
+        amount: amount,
+        bank: transfer.bank,
+        bank_code: transfer.bank_code,
+        account_number: transfer.account_number,
+        account_name: transfer.account_name,
+        narration: transfer.narration,
+        reference: transfer.trx_ref
       }
 
       //send transfer to atlas
@@ -88,13 +98,14 @@ cron.schedule('* * * * *', async () => {
       if (accountRes.data.status !== 'success') {
         await Transaction.query().patch({ status: 11 }).where({ id: transfer.transactionId });
         await Transfer.query().patch({ status: 11 }).where({ id: transfer.id });
+        console.log('error creating transfer on atlas')
       }
 
       //if response from atlas is success, u can update transfer db with the atlas reference returned
-      const data = {
+      await updateTransferByRef(trx_ref, {
+        meta_data: JSON.stringify(accountRes),
         payment_gateway_ref: accountRes.data.trx_ref,
-      };
-      await updateTransferByRef(trx_ref, data);
+      });
 
       console.log(`Processing transaction \nID: ${transaction.id}`);
     }
