@@ -1,4 +1,5 @@
-const { WEBHOOK_SECRET } = require('../config');
+const axios = require('axios');
+const { WEBHOOK_SECRET, atlasConfig, WEBHOOK_URL, ATLAS_SECRET } = require('../config');
 const { sendCreditMail } = require('../mailer');
 const Deposit = require('../models/deposit');
 const { getAccount, updateByAccount } = require('../services/accountService');
@@ -10,13 +11,19 @@ const { updateWebhook, getWebhook, createWebhook } = require('../services/webHoo
 
 
 const setWebhookLink = async (req, res) => {
+    const data = req.body;
     try {
-        const data = req.body;
+        const response = await axios(atlasConfig(data, WEBHOOK_URL, 'post', ATLAS_SECRET));
 
-        const result = await updateWebhook(data);
+        if (response.data.status === 'failed') {
+            // throw new Error('Error in updating webhook');
+            console.log('-----==: ', response.data)
+            return res.status(400).json({ error: 'Failed to update webhook' })
+        }
 
-        return res.status(200).json({ message: 'Webhook and secret updated successfully', data: result });
+        return res.status(200).json({ message: 'Webhook and secret updated successfully', data: response.data });
     } catch (error) {
+        console.error('Error in updating Webhook URL:', error.message);
         return res.status(400).json({ error: { message: error.message || 'Error in updating webhook' } });
     }
 };
@@ -68,7 +75,7 @@ const processDeposit = async (payload) => {
 
         const accountData = await getAccount(payload.account_number);
         const userId = accountData.userId;
-    
+
         const user = await getUserById(userId);
         const depositData = {
             type: payload.type,
@@ -96,7 +103,7 @@ const processDeposit = async (payload) => {
 
         const updateBalance = await updateByAccount(payload.account_number, newBalance);
         const txn = await createTransaction(transactionData);
-        
+
         const logDeposit = await Deposit.query().insert(depositData);
 
         await sendCreditMail(user.email, payload);
@@ -115,7 +122,7 @@ const processTransferHook = async (payload) => {
     status = payload.meta.status;
     if (status === 'failed') {
         const { merchant_ref, meta } = payload;
-    const { account_name, account_bank, account_number, narration, currency, amount, trx_ref, secret, status, type } = meta;
+        const { account_name, account_bank, account_number, narration, currency, amount, trx_ref, secret, status, type } = meta;
         await updatePendingTrfByRef(merchant_ref, { status: 11 });
         await updateTransactionByRef(merchant_ref, { status: 11 });
     }
