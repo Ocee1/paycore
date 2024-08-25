@@ -7,7 +7,7 @@ const { getAccountByUserId, updateByAccount } = require('../services/accountServ
 const { getPendingTransfers, findTransferByIdAndUpdate } = require('../services/transferService');
 const { reversalMail } = require('../mailer');
 
-cron.schedule('*/10 * * * *', async () => {
+cron.schedule('*/2 * * * *', async () => {
   console.log('Running cron job to reverse failed transactions');
 
   try {
@@ -35,7 +35,7 @@ cron.schedule('*/10 * * * *', async () => {
         trx_ref: transfer.trx_ref,
         payment_gateway_ref: transfer.payment_gateway_ref,
         balanceBefore: String(currentBalance),
-        BalanceAfter: newBalance
+        BalanceAfter: String(newBalance)
       };
 
       //user balance is 1st bal after

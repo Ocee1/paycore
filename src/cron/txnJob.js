@@ -66,9 +66,10 @@ cron.schedule('* * * * *', async () => {
       }
 
       //Create a transaction for the deduction, also take note of the transfer fee
+      console.log('================: ', transfer.type)
       const trxData = {
         userId: String(transfer.userId),
-        type: transfer.type,
+        type: 'transfer',
         amount: transfer.amount,
         narration: transfer.narration,
         status: 1,
