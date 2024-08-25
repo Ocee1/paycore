@@ -67,13 +67,14 @@ cron.schedule('* * * * *', async () => {
 
       //Create a transaction for the deduction, also take note of the transfer fee
       const trxData = {
-        userId: String(user.id),
+        userId: String(transfer.userId),
         type: transfer.type,
         amount: transfer.amount,
         narration: transfer.narration,
         status: 1,
         fee: fee,
-        balanceBefore: String(senderAccount.balance),
+        balanceBefore: String(txnAccount.balance),
+        balanceAfter: newBalance
       };
 
       const transaction = await createTransaction(trxData);
@@ -82,7 +83,7 @@ cron.schedule('* * * * *', async () => {
       }
 
       const data = {
-        amount: amount,
+        amount: transfer.amount,
         bank: transfer.bank,
         bank_code: transfer.bank_code,
         account_number: transfer.account_number,
