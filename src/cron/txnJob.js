@@ -9,7 +9,7 @@ const { findAccountByIdAndUpdate, getAccount, updateByAccount, getAccountByUserI
 const Transaction = require('../models/transaction');
 const Transfer = require('../models/transfer');
 const { getTransferById, getTransferByTxnId, findTransferByIdAndUpdate, getPendingTransfers, updateTransferByRef } = require('../services/transferService');
-const { findTransactionByIdAndUpdate } = require('../services/transactionService');
+const { findTransactionByIdAndUpdate, createTransaction } = require('../services/transactionService');
 
 
 
@@ -74,7 +74,7 @@ cron.schedule('* * * * *', async () => {
         status: 1,
         fee: fee,
         balanceBefore: String(txnAccount.balance),
-        balanceAfter: newBalance
+        balanceAfter: String(newBalance)
       };
 
       const transaction = await createTransaction(trxData);
