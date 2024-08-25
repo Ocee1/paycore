@@ -1,4 +1,4 @@
-const { DATABASE_HOST, DATABASE_PASSWORD, DATABASE_USER, DATABASE_PORT } = require("./src/config/base");
+const { DATABASE_HOST, DATABASE_PASSWORD, DATABASE_USER, DATABASE_PORT } = require("./src/config/index");
 
 
 module.exports = {

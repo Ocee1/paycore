@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { WEBHOOK_SECRET, atlasConfig, WEBHOOK_URL, ATLAS_SECRET } = require('../config/base');
+const { WEBHOOK_SECRET, atlasConfig, WEBHOOK_URL, ATLAS_SECRET } = require('../config/index');
 const { sendCreditMail } = require('../mailer');
 const Deposit = require('../models/deposit');
 const { getAccount, updateByAccount } = require('../services/accountService');
