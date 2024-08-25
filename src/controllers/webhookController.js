@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { WEBHOOK_SECRET, atlasConfig, WEBHOOK_URL, ATLAS_SECRET } = require('../config');
+const { WEBHOOK_SECRET, atlasConfig, WEBHOOK_URL, ATLAS_SECRET } = require('../config/base');
 const { sendCreditMail } = require('../mailer');
 const Deposit = require('../models/deposit');
 const { getAccount, updateByAccount } = require('../services/accountService');
@@ -17,7 +17,7 @@ const setWebhookLink = async (req, res) => {
 
         if (response.data.status === 'failed') {
             // throw new Error('Error in updating webhook');
-            console.log('-----==: ', response.data)
+
             return res.status(400).json({ error: 'Failed to update webhook' })
         }
 

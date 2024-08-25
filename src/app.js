@@ -6,7 +6,7 @@ const helmet = require('helmet');
 require('./cron/reversalJob');
 require('./cron/txnJob');
 const knex = require('./config/objection');
-const { corsOptions, DATABASE_PASSWORD, DATABASE_USER, MONGO_URI, NODE_ENV, PORT } = require('./config/index');
+const { corsOptions, DATABASE_PASSWORD, DATABASE_USER, MONGO_URI, NODE_ENV, PORT } = require('./config/base');
 
 
 function createApp(routes) {

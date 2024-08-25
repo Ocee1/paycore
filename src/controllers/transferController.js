@@ -1,4 +1,4 @@
-const { GET_ACCOUNT_URL, ATLAS_SECRET, atlasConfig } = require("../config");
+const { GET_ACCOUNT_URL, ATLAS_SECRET, atlasConfig } = require("../config/base");
 const validate = require("../validation/transactionValidation");
 const { getUserById, } = require("../services/user.service");
 const axios = require("axios");

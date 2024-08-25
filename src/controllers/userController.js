@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { ATLAS_SECRET, CREATE_ACCOUNT_URL, atlasConfig } = require("../config");
+const { ATLAS_SECRET, CREATE_ACCOUNT_URL, atlasConfig } = require("../config/base");
 const { sendOtp } = require("../mailer");
 const { createAccount, getAccount, getAccountByEmail, getAccountById, getAccountByUserId } = require("../services/accountService");
 const { createUser, getUserById, findByIdAndUpdate, removeUser, getUserByEmail, } = require("../services/user.service");

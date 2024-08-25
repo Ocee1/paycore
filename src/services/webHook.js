@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { atlasConfig, WEBHOOK_URL } = require('../config');
+const { atlasConfig, WEBHOOK_URL } = require('../config/base');
 const Webhook = require('../models/webHook');
 
 const createWebhook = async (webHook) => {

@@ -3,7 +3,7 @@ const moment = require('moment');
 const Otp = require('../models/otp');
 const Token = require('../models/token');
 const { saveToken, getToken, getOtp } = require('../services/user.service');
-const { AUTH_SECRET } = require('../config');
+const { AUTH_SECRET } = require('../config/base');
 const momentZone = require("moment-timezone");
 
 
