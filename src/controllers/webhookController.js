@@ -1,11 +1,12 @@
+/* eslint-disable no-unused-vars */
 const axios = require('axios');
 const { WEBHOOK_SECRET, atlasConfig, WEBHOOK_URL, ATLAS_SECRET } = require('../config/index');
 const { sendCreditMail } = require('../mailer');
 const Deposit = require('../models/deposit');
 const { getAccount, updateByAccount } = require('../services/accountService');
-const { getDepositBySessionId } = require('../services/depositService');
+const { getDepositBySessionId, createDeposit } = require('../services/depositService');
 const { createTransaction, updateTransactionByRef } = require('../services/transactionService');
-const { findTransferByIdAndUpdate, updateTransferByRef, updatePendingTrfByRef } = require('../services/transferService');
+const { findTransferByIdAndUpdate, updateTransferByRef, updatePendingTrfByRef, getTrfBySessionId } = require('../services/transferService');
 const { getUserByEmail, getUserById } = require('../services/user.service');
 const { updateWebhook, getWebhook, createWebhook } = require('../services/webHook');
 
@@ -36,9 +37,11 @@ const webhooks = async (req, res) => {
     if (payload.type && payload.secret) {
         type = payload.type;
         secret = payload.secret;
+    } else {
+        type = payload.meta.type;
+        secret = payload.meta;
     }
-    type = payload.meta.type;
-    secret = payload.meta;
+
     const webPayload = {
         type: payload.type,
         meta_data: payload
@@ -57,11 +60,13 @@ const webhooks = async (req, res) => {
     });
 
     if (payload.type === 'collection') {
-        const trfHook = await processTransferHook(payload)
+        const trfHook = await processDeposit(payload);
+        return "Successfully processed deposit webhook"
     }
     if (type === 'transfer') {
-        await processReversal(payload);
-    }
+        await processTransferHook(payload);
+        return "Successfully processed transfer webhook";
+    };
 
 };
 
@@ -92,19 +97,23 @@ const processDeposit = async (payload) => {
         const balanceBefore = String(accountData.balance);
         const transactionData = {
             transactionType: payload.type,
-            userId: String(userId),
+            userId: userId,
             amount: payload.amount,
             narration: payload.source.narration,
             status: 3,
             balanceBefore,
             balanceAfter
         };
-        console.log('loooooooo:  ', transactionData)
+
 
         const updateBalance = await updateByAccount(payload.account_number, newBalance);
         const txn = await createTransaction(transactionData);
 
-        const logDeposit = await Deposit.query().insert(depositData);
+        const logDeposit = await createDeposit(depositData)
+
+        if(!logDeposit) {
+            return "Failed to log Deposit data"
+        }
 
         await sendCreditMail(user.email, payload);
     } catch (error) {
@@ -115,21 +124,29 @@ const processDeposit = async (payload) => {
 
 //Webhook (the webhook for transfer gives you the final result of the transfer)
 const processTransferHook = async (payload) => {
+    const { merchant_ref, meta } = payload;
+    const { account_name, account_bank, account_number, narration, currency, amount, trx_ref, secret, type } = meta;
+
+    const existingTransfer = await getTrfBySessionId(payload.session_id);
+    if (existingTransfer) {
+        return 'Duplicate transaction';
+    }
+
     let status;
     if (payload.status) {
         status = payload.status;
+    } else {
+        status = payload.meta.status;
     }
-    status = payload.meta.status;
+
     if (status === 'failed') {
-        const { merchant_ref, meta } = payload;
-        const { account_name, account_bank, account_number, narration, currency, amount, trx_ref, secret, status, type } = meta;
-        await updatePendingTrfByRef(merchant_ref, { status: 11 });
-        await updateTransactionByRef(merchant_ref, { status: 11 });
-    }
-
-    await updatePendingTrfByRef(merchant_ref, { status: 3 });
-    await updateTransactionByRef(merchant_ref, { status: 3 });
-
+        await updatePendingTrfByRef(payload, { status: 2, meta_data: meta });
+        await updateTransactionByRef(merchant_ref, { status: 2 });
+        return "Transaction failed"
+    } else {
+        await updatePendingTrfByRef(merchant_ref, { status: 3, meta_data: meta });
+        await updateTransactionByRef(merchant_ref, { status: 3 });
+    };
 };
 
 const validateSignature = async (secret) => {

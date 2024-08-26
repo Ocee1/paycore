@@ -31,6 +31,11 @@ const updateByAccount = async (account_number, data) => {
     return result;
 };
 
+const updateByUserId = async (userId, data) => {
+    const result = await Account.query().where('userId', userId).patch({ balance: data });
+    return result;
+};
+
 const findAccountByIdAndUpdate = async (data, id) => {
     const account = await Account.query().patchAndFetchById(id, data);
     return account;
@@ -49,5 +54,6 @@ module.exports = {
     removeAccount,
     getAccount,
     updateByAccount,
-    getAccountByUserId
+    getAccountByUserId,
+    updateByUserId
 };

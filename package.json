@@ -29,6 +29,9 @@
     "qs": "^6.13.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.9.1",
+    "eslint": "^9.9.1",
+    "globals": "^15.9.0",
     "nodemon": "^3.1.4"
   }
 }

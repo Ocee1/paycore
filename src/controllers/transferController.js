@@ -1,4 +1,5 @@
-const { GET_ACCOUNT_URL, ATLAS_SECRET, atlasConfig } = require("../config/index");
+/* eslint-disable no-unused-vars */
+const { GET_ACCOUNT_URL, ATLAS_SECRET, atlasConfig, getTransactionFee } = require("../config/index");
 const validate = require("../validation/transactionValidation");
 const { getUserById, } = require("../services/user.service");
 const axios = require("axios");
@@ -18,7 +19,7 @@ const createTransfer = async (req, res, next) => {
         const { error } = validate(req.body);
         if (error) {
             console.log(error)
-            return res.status(400).json({ error: 'Bad request' });
+            return res.status(400).json({ error: error.message });
         }
 
         const senderAccount = await getAccountByUserId(user.id);
@@ -27,10 +28,10 @@ const createTransfer = async (req, res, next) => {
         if (!verifyPin) return res.status(400).json({ error: { message: "Incorrect transaction pin" } });
 
         //check if the amount is negative, if negative stop the process
-        if (senderAccount.balance < 0) {
+        if (amount < 0) {
             return res.status(400).json({
                 "status": "error",
-                "message": "Insufficient balance. Your account balance is negative."
+                "message": "Invalid amount."
               })
         }
 
@@ -50,14 +51,16 @@ const createTransfer = async (req, res, next) => {
 
         //generate a trx_ref (transaction reference)
         const trx_ref = generateReference();
+        const fee = getTransactionFee(amount);
 
         //save the transfer on the transfer table, with status 0
 
         const payload = {
             trx_ref: ~~trx_ref,
-            userId: String(user.id),
+            userId: user.id,
             status: 0,
             amount: amount,
+            fee: fee,
             bank: bank,
             bank_code: bank_code,
             account_number: account_number,

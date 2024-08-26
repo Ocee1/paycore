@@ -19,6 +19,7 @@ class Transfer extends Model {
         status: { type: 'integer', enum: [ 0, 1, 2, 3, 11 ] },
         trx_ref: { type: 'integer' },
         payment_gateway_ref: { type: 'integer' },
+        session_id: { type: 'integer' },
         fee: { type: 'number' },
         amount: { type: 'number' },
         bank: { type: 'string' },

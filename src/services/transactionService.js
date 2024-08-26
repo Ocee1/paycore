@@ -1,6 +1,4 @@
 const Transaction = require("../models/transaction");
-const Webhook = require("../models/webHook");
-
 
 const createTransaction = async (data) => {
     const result = await Transaction.query().insert(data);
@@ -23,7 +21,7 @@ const findTransactionByIdAndUpdate = async (data, id) => {
 };
 
 const updateTransactionByRef = async (trx_ref, data) => {
-    const result = await Account.query().where('trx_rf', trx_ref).patch(data);
+    const result = await Transaction.query().where('trx_rf', trx_ref).patch(data);
     return result;
 };
 

@@ -1,13 +1,13 @@
 const axios = require("axios");
 const { ATLAS_SECRET, CREATE_ACCOUNT_URL, atlasConfig } = require("../config/index");
 const { sendOtp } = require("../mailer");
-const { createAccount, getAccount, getAccountByEmail, getAccountById, getAccountByUserId } = require("../services/accountService");
-const { createUser, getUserById, findByIdAndUpdate, removeUser, getUserByEmail, } = require("../services/user.service");
+const { createAccount, getAccountByUserId } = require("../services/accountService");
+const { createUser, getUserById, findByIdAndUpdate, getUserByEmail, } = require("../services/user.service");
 const { generateOtp, createToken, hashPassword, verifyPassword, verifyOtp, saveOtp } = require("../utils/token");
 const { loginValidation, signupValidation, transactionPinValidation } = require("../validation/userValidation");
-const Account = require("../models/account");
 
-const registerUser = async (req, res, next) => {
+
+const registerUser = async (req, res) => {
     console.log('Request Body:', req.body);
     console.log('Stack Trace:', new Error().stack);
     const { body } = req;
@@ -52,11 +52,14 @@ const registerUser = async (req, res, next) => {
         };
 
         const account = await createAccount(accountData)
+        if(!account) {
+            return res.status(500).json({ error: 'Error occured while creating account' });
+        }
 
         res.status(200).json({ message: 'User created successfully' })
 
     } catch (error) {
-        res.status(500).json({ error: 'Error occured while processing your request' })
+        res.status(500).json({ error: 'Error occured while processing your request', message: error.message })
     }
 };
 
@@ -82,6 +85,9 @@ const loginUser = async (req, res) => {
 
         const otp = await generateOtp(isUser.id);
         const toksOtp = await saveOtp(isUser.id, otp);
+        if(!toksOtp) {
+            return res.status(400).json({ error: "Error saving OTP to DB"})
+        }
 
         await sendOtp(otp, isUser.email);
         console.log(otp);
@@ -144,6 +150,9 @@ const createTransactionPin = async (req, res) => {
     }
 }
 
+const home = ( req, res) => {
+    return res.send('Welcome to Paycore. The home os seamless TXNs')
+}
 
 
 
@@ -152,4 +161,5 @@ module.exports = {
     loginUser,
     registerUser,
     createTransactionPin,
+    home
 }

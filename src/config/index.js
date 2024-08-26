@@ -89,5 +89,6 @@ module.exports = {
   WEBHOOK_SECRET,
   WEBHOOK_URL,
   AUTH_SECRET,
-  getTransactionFee
+  getTransactionFee,
+  PORT
 }
