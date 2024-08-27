@@ -20,6 +20,7 @@ const PORT = process.env.PORT || envConfig.PORT
 const ATLAS_SECRET = process.env.ATLAS_SECRET || envConfig.ATLAS_SECRET;
 const CREATE_ACCOUNT_URL = process.env.CREATE_ACCOUNT_URL || envConfig.CREATE_ACCOUNT_URL
 const GET_ACCOUNT_URL = process.env.GET_ACCOUNT_URL || envConfig.GET_ACCOUNT_URL
+const GET_COLLECTIONS_URL = process.env.GET_ACCOUNT_URL || envConfig.GET_COLLECTIONS_URL;
 const CREATE_TRANSFER_URL = process.env.CREATE_TRANSFER_URL || envConfig.CREATE_TRANSFER_URL;
 const MAIL_PASSWORD = process.env.MAIL_PASSWORD  || envConfig.MAIL_PASSWORD
 const MAIL_USER = process.env.MAIL_USER || envConfig.MAIL_USER
@@ -78,6 +79,7 @@ module.exports = {
   ATLAS_SECRET,
   CREATE_ACCOUNT_URL,
   CREATE_TRANSFER_URL,
+  GET_COLLECTIONS_URL,
   GET_ACCOUNT_URL,
   MAIL_PASSWORD,
   MAIL_PORT,

@@ -1,6 +1,6 @@
 const express = require('express');
 
-const Auth = require('../middlewares/auth');
+
 const { setWebhookLink, webhooks } = require('../controllers/webhookController');
 
 

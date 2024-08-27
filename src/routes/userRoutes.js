@@ -11,6 +11,7 @@ router.post('/auth/signin', UserController.loginUser);
 router.post('/auth/verify-otp', UserController.verifyOtpLogin);
 router.patch('/create-transaction-pin', Auth.authorize, UserController.createTransactionPin);
 router.get('/', UserController.home);
+router.get('/balance', Auth.authorize, UserController.getBalance);
 
 
 

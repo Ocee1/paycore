@@ -15,7 +15,7 @@ class Transfer extends Model {
       required: ['userId', 'status', 'amount'],
       properties: {
         id: { type: 'integer' }, 
-        userId: { type: 'string' },
+        userId: { type: 'integer' },
         status: { type: 'integer', enum: [ 0, 1, 2, 3, 11 ] },
         trx_ref: { type: 'integer' },
         payment_gateway_ref: { type: 'integer' },

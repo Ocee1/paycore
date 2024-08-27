@@ -106,8 +106,8 @@ cron.schedule('* * * * *', async () => {
         payment_gateway_ref: accountRes.data.trx_ref,
       });
 
-      console.log(`Processing transaction \nID: ${transaction.id}`);
+      console.log(`Processing transfer \nID: ${transaction.id}`);
   } catch (error) {
-    console.error('Error processing transactions:', error.message);
+    console.error('Error processing transfer:', error);
   }
 });

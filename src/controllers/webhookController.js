@@ -80,6 +80,7 @@ const processDeposit = async (payload) => {
 
         const accountData = await getAccount(payload.account_number);
         const userId = accountData.userId;
+        console.log(`payloaddedd ====  ;: ${JSON.stringify(payload)}`)
 
         const user = await getUserById(userId);
         const depositData = {
@@ -93,10 +94,10 @@ const processDeposit = async (payload) => {
         };
 
         const newBalance = ~~accountData.balance + ~~payload.amount;
-        const balanceAfter = String(newBalance);
-        const balanceBefore = String(accountData.balance);
+        const balanceAfter = newBalance;
+        const balanceBefore = accountData.balance;
         const transactionData = {
-            transactionType: payload.type,
+            type: payload.type,
             userId: userId,
             amount: payload.amount,
             narration: payload.source.narration,

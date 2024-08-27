@@ -14,7 +14,7 @@ class Transaction extends Model {
 
       properties: {
         id: { type: 'integer' },
-        userId: { type: 'string' },
+        userId: { type: 'integer' },
         status: { type: 'integer', enum: [ 0, 1, 2, 3] },
         amount: { type: 'number' },
         type: { type: 'string' },

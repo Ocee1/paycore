@@ -34,6 +34,7 @@ const saveToken = async (userId, token) => {
 
 
     const expiresAt = moment().add(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+    console.log(`from the DB i/o ============= ${expiresAt}`)
 
     const authToken = await Token.query().insert({
         userId,
@@ -42,18 +43,24 @@ const saveToken = async (userId, token) => {
     });
     return authToken;
 }
- const getToken = async (token) => {
+const getToken = async (token) => {
     const savedToken = await Token.query().findOne({ token });
     return savedToken;
- }
+}
+const saveOtp = async (userId, otp) => {
+    const expiresAt = moment().add(5, 'minutes').format('YYYY-MM-DD HH:mm:ss');
 
- const getOtp = async (userId, otp) => {
+    const userOtp = await Otp.query().insert({ userId, otp, expiresAt });
+    return userOtp;
+};
+
+const getOtp = async (userId, otp) => {
     const otpRecord = await Otp.query().findOne({
         userId,
         otp
     })
     return otpRecord;
- }
+}
 
 module.exports = {
     createUser,
@@ -63,5 +70,6 @@ module.exports = {
     removeUser,
     saveToken,
     getToken,
-    getOtp
+    getOtp,
+    saveOtp
 };

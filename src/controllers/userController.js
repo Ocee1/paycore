@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { ATLAS_SECRET, CREATE_ACCOUNT_URL, atlasConfig } = require("../config/index");
+const { ATLAS_SECRET, CREATE_ACCOUNT_URL, atlasConfig, } = require("../config/index");
 const { sendOtp } = require("../mailer");
 const { createAccount, getAccountByUserId } = require("../services/accountService");
 const { createUser, getUserById, findByIdAndUpdate, getUserByEmail, } = require("../services/user.service");
@@ -9,7 +9,6 @@ const { loginValidation, signupValidation, transactionPinValidation } = require(
 
 const registerUser = async (req, res) => {
     console.log('Request Body:', req.body);
-    console.log('Stack Trace:', new Error().stack);
     const { body } = req;
 
     try {
@@ -24,7 +23,7 @@ const registerUser = async (req, res) => {
         const data = {
             first_name: body.firstName,
             last_name: body.lastName,
-            phone: '08123456780',
+            phone: '08148009889',
             amount: 0,
             email: body.email,
         };
@@ -52,7 +51,7 @@ const registerUser = async (req, res) => {
         };
 
         const account = await createAccount(accountData)
-        if(!account) {
+        if (!account) {
             return res.status(500).json({ error: 'Error occured while creating account' });
         }
 
@@ -64,7 +63,7 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-    
+
     const { body } = req;
 
     try {
@@ -85,8 +84,8 @@ const loginUser = async (req, res) => {
 
         const otp = await generateOtp(isUser.id);
         const toksOtp = await saveOtp(isUser.id, otp);
-        if(!toksOtp) {
-            return res.status(400).json({ error: "Error saving OTP to DB"})
+        if (!toksOtp) {
+            return res.status(400).json({ error: "Error saving OTP to DB" })
         }
 
         await sendOtp(otp, isUser.email);
@@ -115,10 +114,12 @@ const verifyOtpLogin = async (req, res) => {
     if (!token) {
         return res.status(500).send('error saving token');
     }
+    const theAcc = await getAccountByUserId(user.id)
     const payload = {
         message: 'Login successful',
         userId: user.id,
         accessToken: token,
+        theAcc
     }
 
     res.status(200).json(payload);
@@ -138,28 +139,43 @@ const createTransactionPin = async (req, res) => {
         if (isUser.transaction_pin) {
             const acc = await getAccountByUserId(isUser.id);
             console.log(JSON.stringify(acc))
-            return res.status(400).json({ error: { message: "Transaction pin already exists!" }});
+            return res.status(400).json({ error: { message: "Transaction pin already exists!" } });
         }
         const updatedUser = await findByIdAndUpdate({ transaction_pin }, user.id)
         if (!updatedUser) return res.status(500).json({ error: { message: 'User Not found' } });
 
-        res.status(201).json({message: 'Transaction Pin successfully created!', updatedUser})
+        res.status(201).json({ message: 'Transaction Pin successfully created!', updatedUser })
     } catch (error) {
         console.log('error:  :', error)
         res.status(500).json({ error: { message: 'Error in generating transaction pin' } });
     }
 }
 
-const home = ( req, res) => {
+const home = (req, res) => {
     return res.send('Welcome to Paycore. The home os seamless TXNs')
 }
 
-
+const getBalance = async (req, res) => {
+    const { user } = req;
+    const userAccount = await getAccountByUserId(user.id);
+    // var config = {
+    //     url: GET_COLLECTIONS_URL,
+    //     method: 'GET',
+    //     headers: {
+    //         'Content-Type': 'application/x-www-form-urlencoded',
+    //         'Authorization': `Bearer ${ATLAS_SECRET}`
+    //     },
+    // };
+    // const collections = await axios(config);
+    // const data = !collections.status ? res.status(404).json({ error: "ops failed" }) : collections;
+    res.status(200).json({ status: 'success', message: `Your account balance for account ${userAccount.account_number} is ====:: ${userAccount.balance} and \n coleections===== :::` })
+}
 
 module.exports = {
     verifyOtpLogin,
     loginUser,
     registerUser,
     createTransactionPin,
-    home
+    home,
+    getBalance
 }

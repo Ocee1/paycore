@@ -83,7 +83,7 @@ const verifyTransactionPin = async (userId, transactionPin) => {
         console.log(user)
         throw new Error('Transaction pin not set');
     }
-    console.log(user.transaction_pin, transactionPin)
+    console.log('user ----:::', user, '=========', user.transaction_pin, transactionPin)
     return (user.transaction_pin === transactionPin);
 }
 
