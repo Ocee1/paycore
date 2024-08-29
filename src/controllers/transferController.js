@@ -9,10 +9,9 @@ const { createTrf } = require("../services/transferService");
 
 
 const createTransfer = async (req, res, next) => {
-    const { amount, transactionPin, account_number, bank, bank_code, narration, currency} = req.body;
+    const { amount, transactionPin, account_number, bank, bank_code, narration, currency } = req.body;
     const user = req.user;
 
-    
     try {
         //data => amount, bank_code, bank_name, account_number, account_name, narrations, currency
         //validate the data above
@@ -32,17 +31,19 @@ const createTransfer = async (req, res, next) => {
             return res.status(400).json({
                 "status": "error",
                 "message": "Invalid amount."
-              })
+            })
         }
 
         //validate the account number
         const accountInfo = await axios(atlasConfig({ bank: bank_code, account_number: account_number }, GET_ACCOUNT_URL, 'post', ATLAS_SECRET));
-        if (accountInfo.data.status !== 'success') return res.status(400).json(
+        if (accountInfo.data.status !== 'success') {
+            console.log('------info ----- :', accountInfo.data)
+            return res.status(400).json(
             {
                 "status": "error",
-                "message": "Account not found" 
+                "message": "Account not found"
             });
-
+        }
         //select the account details and the get the current user balance
         const currentBalance = senderAccount.balance;
 
@@ -64,11 +65,15 @@ const createTransfer = async (req, res, next) => {
             bank: bank,
             bank_code: bank_code,
             account_number: account_number,
-            account_name: accountInfo.data.data.account_name,
+            account_name: accountInfo.data.data,
             narration: narration,
         };
 
         const transfer = await createTrf(payload);
+        if (!transfer) {
+            console.log('Failed to create transfer!!!')
+            return res.status(400).json({ error: "Failed to save transfer" });
+        }
 
         res.status(200).json({ error: 'Your request is processing' });
     } catch (error) {
@@ -83,7 +88,7 @@ const verifyTransactionPin = async (userId, transactionPin) => {
         console.log(user)
         throw new Error('Transaction pin not set');
     }
-    console.log('user ----:::', user, '=========', user.transaction_pin, transactionPin)
+
     return (user.transaction_pin === transactionPin);
 }
 

@@ -19,7 +19,7 @@ class Transaction extends Model {
         amount: { type: 'number' },
         type: { type: 'string' },
         trx_ref: { type: 'integer' },
-        payment_gateway_ref: { type: 'integer' },
+        payment_gateway_ref: { type: 'string' },
         fee: { type: 'number' },
         balanceBefore: { type: 'number'},
         balanceAfter: { type: 'number' },

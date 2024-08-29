@@ -22,7 +22,7 @@ async function authorize(req, res, next) {
         const userId = decodedToken.userId; 
         const user = await User.query().findById(userId); 
         
-        console.log(`the userrrrr ===========  ;;;;;  ${user.id}`)
+
         if (!user) {
             return res.status(403).send({ error: { message: 'User not authorized' } });
         }

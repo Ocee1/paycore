@@ -40,7 +40,7 @@ const findTransferByIdAndUpdate = async (data, id) => {
 };
 
 const updateTransferByRef = async (trx_ref, data) => {
-    const result = await Transfer.query().where('trx_rf', trx_ref).patch(data);
+    const result = await Transfer.query().where('trx_ref', trx_ref).patch(data);
     return result;
 };
 

@@ -1,7 +1,7 @@
 const axios = require("axios");
 const { ATLAS_SECRET, CREATE_ACCOUNT_URL, atlasConfig, } = require("../config/index");
 const { sendOtp } = require("../mailer");
-const { createAccount, getAccountByUserId } = require("../services/accountService");
+const { createAccount, getAccountByUserId, } = require("../services/accountService");
 const { createUser, getUserById, findByIdAndUpdate, getUserByEmail, } = require("../services/user.service");
 const { generateOtp, createToken, hashPassword, verifyPassword, verifyOtp, saveOtp } = require("../utils/token");
 const { loginValidation, signupValidation, transactionPinValidation } = require("../validation/userValidation");
@@ -23,7 +23,7 @@ const registerUser = async (req, res) => {
         const data = {
             first_name: body.firstName,
             last_name: body.lastName,
-            phone: '08148009889',
+            phone: '',
             amount: 0,
             email: body.email,
         };
@@ -114,12 +114,11 @@ const verifyOtpLogin = async (req, res) => {
     if (!token) {
         return res.status(500).send('error saving token');
     }
-    const theAcc = await getAccountByUserId(user.id)
+  
     const payload = {
         message: 'Login successful',
         userId: user.id,
         accessToken: token,
-        theAcc
     }
 
     res.status(200).json(payload);
@@ -158,16 +157,8 @@ const home = (req, res) => {
 const getBalance = async (req, res) => {
     const { user } = req;
     const userAccount = await getAccountByUserId(user.id);
-    // var config = {
-    //     url: GET_COLLECTIONS_URL,
-    //     method: 'GET',
-    //     headers: {
-    //         'Content-Type': 'application/x-www-form-urlencoded',
-    //         'Authorization': `Bearer ${ATLAS_SECRET}`
-    //     },
-    // };
-    // const collections = await axios(config);
-    // const data = !collections.status ? res.status(404).json({ error: "ops failed" }) : collections;
+    
+
     res.status(200).json({ status: 'success', message: `Your account balance for account ${userAccount.account_number} is ====:: ${userAccount.balance} and \n coleections===== :::` })
 }
 

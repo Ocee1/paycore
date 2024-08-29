@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const moment = require('moment');
 const Otp = require('../models/otp');
 const Token = require('../models/token');
-const { saveToken, getToken, getOtp, saveOtp } = require('../services/user.service');
+const { saveToken, getToken, getOtp, saveOtp, updateOtp } = require('../services/user.service');
 const { AUTH_SECRET } = require('../config/index');
 const momentZone = require("moment-timezone");
 
@@ -61,6 +61,9 @@ const verifyOtp = async (userId, otp) => {
     const result = await getOtp(userId, otp);
     if (!result) return false;
 
+    if(result.deletedAt) {
+        return false;
+    }
     // const result = JSON.stringify(otpRecord);
     const expiresAtMoment = moment(result.expiresAt, 'YYYY-MM-DD HH:mm:ss')
 
@@ -68,8 +71,8 @@ const verifyOtp = async (userId, otp) => {
         return false;
     }
 
-
-
+    const usedTime = moment().format('YYYY-MM-DD HH:mm:ss');
+    await updateOtp(result.id, { deletedAt: usedTime });
     // await Otp.query().deleteById(otpRecord.id);
 
     return true;
@@ -95,7 +98,7 @@ function generateReference() {
     for (let i = 0; i < 16; i++) {
         code += possible.charAt(Math.floor(Math.random() * possible.length));
     }
-    return code;
+    return Math.abs(code);
 };
 
 module.exports = { createToken, verifyToken, generateOtp, verifyOtp, hashPassword, verifyPassword, saveOtp, generateReference }

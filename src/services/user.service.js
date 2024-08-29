@@ -42,7 +42,13 @@ const saveToken = async (userId, token) => {
         expires_at: expiresAt
     });
     return authToken;
-}
+};
+
+const updateOtp = async (id, data) => {
+    const result = await Otp.query().patchAndFetchById(id, data);
+    return result;
+};
+
 const getToken = async (token) => {
     const savedToken = await Token.query().findOne({ token });
     return savedToken;
@@ -71,5 +77,5 @@ module.exports = {
     saveToken,
     getToken,
     getOtp,
-    saveOtp
+    saveOtp,updateOtp
 };

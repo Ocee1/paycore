@@ -31,25 +31,18 @@ const setWebhookLink = async (req, res) => {
 
 const webhooks = async (req, res) => {
     const payload = req.body;
-    let type;
-    let secret;
-
-    if (payload.type && payload.secret) {
-        type = payload.type;
-        secret = payload.secret;
-    } else {
-        type = payload.meta.type;
-        secret = payload.meta;
-    }
+    let type = payload.type;;
+    let secret = payload.secret;;
 
     const webPayload = {
         type: payload.type,
         meta_data: payload
-    }
-    const hook = await createWebhook(webPayload);
-    secret = payload.secret || payload.meta.secret;
+    };
 
-    const isValidRequest = validateSignature(payload.secret);
+    const hook = await createWebhook(webPayload);
+
+
+    const isValidRequest = validateSignature(secret);
     if (!isValidRequest) {
         return res.status(400).send('Invalid request');
     }
@@ -59,7 +52,7 @@ const webhooks = async (req, res) => {
         message: 'Webhook received',
     });
 
-    if (payload.type === 'collection') {
+    if (type === 'collection') {
         const trfHook = await processDeposit(payload);
         return "Successfully processed deposit webhook"
     }
@@ -125,8 +118,8 @@ const processDeposit = async (payload) => {
 
 //Webhook (the webhook for transfer gives you the final result of the transfer)
 const processTransferHook = async (payload) => {
-    const { merchant_ref, meta } = payload;
-    const { account_name, account_bank, account_number, narration, currency, amount, trx_ref, secret, type } = meta;
+    const { merchant_ref, meta, trx_ref } = payload;
+    const { account_name, account_bank, account_number, narration, currency, amount, secret, type } = meta;
 
     const existingTransfer = await getTrfBySessionId(payload.session_id);
     if (existingTransfer) {
@@ -143,10 +136,20 @@ const processTransferHook = async (payload) => {
     if (status === 'failed') {
         await updatePendingTrfByRef(payload, { status: 2, meta_data: meta });
         await updateTransactionByRef(merchant_ref, { status: 2 });
+        console.log({status: "Failed", Message: "Transfer failed"})
         return "Transaction failed"
     } else {
-        await updatePendingTrfByRef(merchant_ref, { status: 3, meta_data: meta });
-        await updateTransactionByRef(merchant_ref, { status: 3 });
+        await updatePendingTrfByRef(merchant_ref, {
+            status: 3, 
+            meta_data: meta,
+            payment_gateway_ref: trx_ref
+        });
+        await updateTransactionByRef(merchant_ref, { 
+            status: 3,
+            payment_gateway_ref: trx_ref
+        });
+        console.log({status: "Successful", Message: "Transfer succesful", trx_ref })
+        return "Transfer successful"
     };
 };
 

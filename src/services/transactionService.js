@@ -21,7 +21,7 @@ const findTransactionByIdAndUpdate = async (data, id) => {
 };
 
 const updateTransactionByRef = async (trx_ref, data) => {
-    const result = await Transaction.query().where('trx_rf', trx_ref).patch(data);
+    const result = await Transaction.query().where('trx_ref', trx_ref).patch(data);
     return result;
 };
 
