@@ -6,7 +6,10 @@ const helmet = require('helmet');
 require('./cron/reversalJob');
 require('./cron/txnJob');
 require('./cron/dataRefundJob')
-require('./cron/dataRefundJob')
+require('./cron/electricityReversal');
+require('./cron/airtimeRefund');
+require('./cron/bettingRefund');
+require('./cron/cableRefund');
 const knex = require('./config/objection');
 const { corsOptions, DATABASE_PASSWORD, DATABASE_USER, MONGO_URI, NODE_ENV, PORT } = require('./config/index');
 

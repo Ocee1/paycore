@@ -1,21 +1,21 @@
-const { atlasConfig, ATLAS_SECRET, RECHARGE_AIRTIME_URL } = require("../config");
+const { atlasConfig, ATLAS_SECRET, VALIDATE_METER_NUMBER, PURCHASE_ELECTRICITY } = require("../config");
 const { getAccountByUserId, updateByAccount } = require("../services/accountService");
 const { verifyTransactionPin, createTransaction, findTransactionByIdAndUpdate } = require("../services/transactionService");
 const { generateReference } = require("../utils/token");
 const axios = require('axios');
-const { validateAirtimePurchase } = require("../validation/billValidation");
+const { validateCableData } = require("../validation/billValidation");
 const { sendDebitMail } = require("../mailer");
-const { updateAirtimeById, createairtimeLog } = require("../services/airtimeService");
+const { createElecLog, updateElecById } = require("../services/electricityService");
 
-const purchaseAirtime = async (req, res) => {
+const electricityPayment = async (req, res) => {
     const { user, body } = req;
-    const { amount, phone_number, network, transactionPin } = body;
+    const { provider, meter_number, meter_type, phone_number, amount, transactionPin } = body;
 
     const userAccount = await getAccountByUserId(user.id);
 
 
     try {
-        const { error } = validateAirtimePurchase(req.body);
+        const { error } = validateCableData(req.body);
         if (error) {
             console.log(error)
             return res.status(400).json({ error: error.message });
@@ -33,6 +33,26 @@ const purchaseAirtime = async (req, res) => {
             })
         }
 
+        const validationResponse = await axios(atlasConfig({
+            provider,
+            meter_no: meter_number,
+            meter_type
+        }, VALIDATE_METER_NUMBER, 'post', ATLAS_SECRET))
+            .then(response => {
+                return response;
+            })
+            .catch(error => {
+                return { status: 'failed', error };
+            });
+
+        if (validationResponse.status === 'failed') {
+            console.log('Invalid user details')
+            return res.status(400).json({
+                status: 'failed',
+                message: "Invalid user details"
+            });
+        };
+
         const currentBalance = userAccount.balance;
         if (currentBalance < amount) return res.status(400).json({ error: { message: "Insufficient funds" } });
         const trx_ref = generateReference();
@@ -49,7 +69,7 @@ const purchaseAirtime = async (req, res) => {
 
         const transactionData = {
             userId: user.id,
-            type: 'airtime',
+            type: 'electricity',
             amount: amount,
             status: 1,
             trx_ref,
@@ -63,28 +83,33 @@ const purchaseAirtime = async (req, res) => {
             return "Error in creating transaction";
         }
 
-        const airtimeTable = {
+        const elecTable = {
             userId: user.id,
             amount,
-            phone_number,
-            network,
+            provider,
+            meter_number,
+            meter_type,
             merchant_ref: trx_ref,
+            phone_number,
             status: 1
         };
 
-        const savedTable = await createairtimeLog(airtimeTable);
+        const savedTable = await createElecLog(elecTable);
         if (!savedTable) {
             console.log('error logging data')
             return "Error in logging Data purchase";
         };
 
         const dataVar = {
-            amount,
+            provider,
+            meter_no: meter_number,
+            meter_type,
             phone_number,
-            merchant_ref: trx_ref
+            amount,
+            merchant_reference: trx_ref,
         }
 
-        const response = await axios(atlasConfig(dataVar, RECHARGE_AIRTIME_URL, 'post', ATLAS_SECRET))
+        const response = await axios(atlasConfig(dataVar, PURCHASE_ELECTRICITY, 'post', ATLAS_SECRET))
             .then(response => {
                 return response;
             })
@@ -94,31 +119,26 @@ const purchaseAirtime = async (req, res) => {
             });
         if (response.status === 'failed') {
             await findTransactionByIdAndUpdate(transaction.id, { status: 2 });
-            await updateAirtimeById(savedTable.id, { status: 11 });
+            await updateElecById(savedTable.id, { status: 11 });
 
-            console.log('error completing data transaction on atlas')
+            console.log('error completing cable subscription on atlas')
             return res.status(400).json({
                 status: 'failed',
-                message: "Data purchase transaction failed"
+                message: "Cable subscription transaction failed"
             });
         };
 
-        await findTransactionByIdAndUpdate(transaction.id, { status: 3 });
-        console.log({
-            reference: response.data.reference,
-            amount_charged: response.data.amount_charged
-        })
-        await updateAirtimeById({
-            status: 3,
-            reference: response.data.reference,
-            amount_charged: response.data.amount_charged
-        }, savedTable.id);
+        // await findTransactionByIdAndUpdate(transaction.id, { status: 3 });
+        // await updateElecById(savedTable.id, {
+        //     status: 3,
+        //     reference: response.data.reference,
+        // });
 
         await sendDebitMail(user.email, { account: userAccount.account_number, amount });
 
         return res.status(200).json({
             status: 'Success',
-            message: "Data purchase completed successfully"
+            message: "Request is processing"
         });
 
     } catch (error) {
@@ -127,4 +147,4 @@ const purchaseAirtime = async (req, res) => {
     }
 }
 
-module.exports = purchaseAirtime;
+module.exports = electricityPayment;

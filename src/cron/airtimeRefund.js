@@ -16,8 +16,8 @@ cron.schedule('* * * * *', async () => {
         //Selecting a transfer with status 11
         const failedAirtimePurchase = await getFailedAirtime();
         if (!failedAirtimePurchase) {
-            console.log('No failed data purchase');
-            return 'No failed Txns'
+            console.log('No failed airtime purchase');
+            return 'No failed Airtime Txns'
         }
 
         //update status to 12 (processing reversal)

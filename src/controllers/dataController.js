@@ -80,7 +80,7 @@ const purchaseData = async (req, res) => {
             code,
             phone_number,
             provider_code,
-            merchant_ref: trx_ref
+            merchant_reference: trx_ref
         }
 
         const response = await axios(atlasConfig(dataVar, RECHARGE_DATA_URL, 'post', ATLAS_SECRET))
@@ -95,10 +95,11 @@ const purchaseData = async (req, res) => {
             await findTransactionByIdAndUpdate(transaction.id, { status: 2 });
             await updateDataById(savedTable.id, { status: 11 });
 
-            console.log('error completing data transaction on atlas')
+            console.log('error completing data transaction on atlas', response.error)
             return res.status(400).json({
                 status: 'failed',
-                message: "Data purchase transaction failed"
+                message: "Data purchase transaction failed",
+                error: response
             });
         };
 

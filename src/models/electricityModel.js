@@ -1,24 +1,28 @@
 const { Model } = require("objection");
 const User = require("./user");
 
-class Betting extends Model {
+class Electricity extends Model {
     static get tableName() {
-        return 'betting'
+        return 'electricity'
     }
 
     static get jsonSchema() {
         return {
             type: 'object',
-            required: [],
+            required: [ 'userId' ],
             properties: {
                 id: { type: 'integer' },
                 userId: { type: 'integer' },
                 amount: { type: 'number' },
-                name: { type: 'string' },
-                type: { type: 'string' },
-                customer_id: { type: 'string' },
+                provider: { type: 'string' },
+                meter_number: { type: 'string' },
+                meter_type: { type: 'string' },
+                phone_number: { type: 'string' },
+                customer_name: { type: 'string' },
+                customer_address: { type: 'string' },
                 merchant_ref: { type: 'string' },
                 reference: { type: 'string' },
+                meta_data: { type: 'string' },
                 status: { type: 'integer', enum: [ 0, 1, 2, 3, 11, 12 ] },
                 created_at: { type: 'string', format: 'date-time' },
                 updated_at: { type: 'string', format: 'date-time' },
@@ -32,7 +36,7 @@ class Betting extends Model {
                 relation: Model.BelongsToOneRelation,
                 modelClass: User,
                 join: {
-                    from: 'betting.userId',
+                    from: 'electricity.userId',
                     to: 'users.id'
                 }
             }
@@ -40,4 +44,4 @@ class Betting extends Model {
     }
 }
 
-module.exports = Betting;
+module.exports = Electricity;

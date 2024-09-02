@@ -9,6 +9,7 @@ const { createTransaction, updateTransactionByRef } = require('../services/trans
 const { findTransferByIdAndUpdate, updateTransferByRef, updatePendingTrfByRef, getTrfBySessionId } = require('../services/transferService');
 const { getUserByEmail, getUserById } = require('../services/user.service');
 const { updateWebhook, getWebhook, createWebhook } = require('../services/webHook');
+const { getElecByTrxRef, getPendingElecBill, updateElecById } = require('../services/electricityService');
 
 
 const setWebhookLink = async (req, res) => {
@@ -55,10 +56,16 @@ const webhooks = async (req, res) => {
     if (type === 'collection') {
         const trfHook = await processDeposit(payload);
         return "Successfully processed deposit webhook"
-    }
+    };
+
     if (type === 'transfer') {
         await processTransferHook(payload);
         return "Successfully processed transfer webhook";
+    };
+
+    if (type === 'electricity') {
+        // await processTransferHook(payload);
+        // return "Successfully processed transfer webhook";
     };
 
 };
@@ -73,7 +80,6 @@ const processDeposit = async (payload) => {
 
         const accountData = await getAccount(payload.account_number);
         const userId = accountData.userId;
-        console.log(`payloaddedd ====  ;: ${JSON.stringify(payload)}`)
 
         const user = await getUserById(userId);
         const depositData = {
@@ -93,7 +99,6 @@ const processDeposit = async (payload) => {
             type: payload.type,
             userId: userId,
             amount: payload.amount,
-            narration: payload.source.narration,
             status: 3,
             balanceBefore,
             balanceAfter
@@ -105,7 +110,7 @@ const processDeposit = async (payload) => {
 
         const logDeposit = await createDeposit(depositData)
 
-        if(!logDeposit) {
+        if (!logDeposit) {
             return "Failed to log Deposit data"
         }
 
@@ -134,24 +139,63 @@ const processTransferHook = async (payload) => {
     }
 
     if (status === 'failed') {
-        await updatePendingTrfByRef(payload, { status: 2, meta_data: meta });
+        await updatePendingTrfByRef(payload, { status: 11, meta_data: meta });
         await updateTransactionByRef(merchant_ref, { status: 2 });
-        console.log({status: "Failed", Message: "Transfer failed"})
+        console.log({ status: "Failed", Message: "Transfer failed" })
         return "Transaction failed"
     } else {
         await updatePendingTrfByRef(merchant_ref, {
-            status: 3, 
+            status: 3,
             meta_data: meta,
             payment_gateway_ref: trx_ref
         });
-        await updateTransactionByRef(merchant_ref, { 
+        await updateTransactionByRef(merchant_ref, {
             status: 3,
             payment_gateway_ref: trx_ref
         });
-        console.log({status: "Successful", Message: "Transfer succesful", trx_ref })
+        console.log({ status: "Successful", Message: "Transfer succesful", trx_ref })
         return "Transfer successful"
     };
 };
+
+const processElectricity = async (payload) => {
+    const { merchant_ref, meta, status } = payload;
+    const { reference, customer_name, customer_address } = meta;
+
+    const pendingBill = await getPendingElecBill(merchant_ref);
+    if (!pendingBill) {
+        console.log('Transaction not found')
+        return "Electricity bill not found";
+    }
+
+    if (status === 'failed') {
+        await updateElecById({ status: 11, reference, }, pendingBill.id);
+        await updateTransactionByRef(merchant_ref, { 
+            status: 2, 
+            payment_gateway_ref: reference,
+            customer_name,
+            customer_address,
+            reference,
+            meta_data: meta
+         });
+        console.log({ status: "Failed", Message: "Electricity payment failed" })
+        return "Electricity payment failed"
+    } else {
+        await updateElecById({
+            status: 3,
+            customer_name,
+            customer_address,
+            reference,
+            meta_data: meta
+        }, pendingBill.id);
+        await updateTransactionByRef(merchant_ref, {
+            status: 3,
+            payment_gateway_ref: reference
+        });
+        console.log({ status: "Successful", Message: "Transfer succesful", reference })
+        return "Transfer successful"
+    };
+}
 
 const validateSignature = async (secret) => {
     if (WEBHOOK_SECRET !== secret) {

@@ -1,7 +1,7 @@
 const axios = require("axios");
 const { ATLAS_SECRET, CREATE_ACCOUNT_URL, atlasConfig, } = require("../config/index");
 const { sendOtp } = require("../mailer");
-const { createAccount, getAccountByUserId } = require("../services/accountService");
+const { createAccount, getAccountByUserId, updateByAccount } = require("../services/accountService");
 const { createUser, getUserById, findByIdAndUpdate, getUserByEmail, } = require("../services/user.service");
 const { generateOtp, createToken, hashPassword, verifyPassword, verifyOtp, saveOtp } = require("../utils/token");
 const { loginValidation, signupValidation, transactionPinValidation } = require("../validation/userValidation");
@@ -114,7 +114,7 @@ const verifyOtpLogin = async (req, res) => {
     if (!token) {
         return res.status(500).send('error saving token');
     }
-  
+
     const payload = {
         message: 'Login successful',
         userId: user.id,
@@ -157,6 +157,7 @@ const home = (req, res) => {
 const getBalance = async (req, res) => {
     const { user } = req;
     const userAccount = await getAccountByUserId(user.id);
+    
 
     res.status(200).json({ status: 'success', message: `Your account balance for account ${userAccount.account_number} is ====:: ${userAccount.balance} and \n coleections===== :::` })
 }

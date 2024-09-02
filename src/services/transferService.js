@@ -25,14 +25,16 @@ const getTransferByEmail = async (email) => {
     const user = (await Transfer.query().where({ email }).first());
     return user;
 };
+
 const getPendingTransfer = async () => {
     const result = await Transfer.query().findOne({ status: 0 });
     return result;
-}
+};
+
 const getFailedTransfer = async () => {
     const result = await Transfer.query().findOne({ status: 11 });
     return result;
-}
+};
 
 const findTransferByIdAndUpdate = async (data, id) => {
     const user = await Transfer.query().patchAndFetchById(id, data);
