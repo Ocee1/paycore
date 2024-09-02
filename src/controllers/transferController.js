@@ -6,6 +6,7 @@ const axios = require("axios");
 const { getAccountByUserId } = require("../services/accountService");
 const { generateReference } = require("../utils/token");
 const { createTrf } = require("../services/transferService");
+const { verifyTransactionPin } = require("../services/transactionService");
 
 
 const createTransfer = async (req, res, next) => {
@@ -57,7 +58,7 @@ const createTransfer = async (req, res, next) => {
         //save the transfer on the transfer table, with status 0
 
         const payload = {
-            trx_ref: ~~trx_ref,
+            trx_ref: trx_ref,
             userId: user.id,
             status: 0,
             amount: amount,
@@ -82,15 +83,6 @@ const createTransfer = async (req, res, next) => {
     }
 };
 
-const verifyTransactionPin = async (userId, transactionPin) => {
-    const user = await getUserById(userId)
-    if (!user || !user.transaction_pin) {
-        console.log(user)
-        throw new Error('Transaction pin not set');
-    }
-
-    return (user.transaction_pin === transactionPin);
-}
 
 
 

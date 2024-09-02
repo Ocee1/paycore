@@ -1,10 +1,8 @@
 const crypto = require('crypto');
 const moment = require('moment');
-const Otp = require('../models/otp');
-const Token = require('../models/token');
 const { saveToken, getToken, getOtp, saveOtp, updateOtp } = require('../services/user.service');
 const { AUTH_SECRET } = require('../config/index');
-const momentZone = require("moment-timezone");
+
 
 
 
@@ -98,7 +96,7 @@ function generateReference() {
     for (let i = 0; i < 16; i++) {
         code += possible.charAt(Math.floor(Math.random() * possible.length));
     }
-    return Math.abs(code);
+    return code;
 };
 
 module.exports = { createToken, verifyToken, generateOtp, verifyOtp, hashPassword, verifyPassword, saveOtp, generateReference }

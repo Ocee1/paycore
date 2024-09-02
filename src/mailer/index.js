@@ -4,7 +4,7 @@ const { MAIL_PORT, MAIL_USER, MAIL_PASSWORD, MAIL_HOST } = require('../config/in
 const transporter = nodemailer.createTransport({
   host: MAIL_HOST,
   port: MAIL_PORT,
-  secure: false, // or 'STARTTLS'
+  secure: false, 
   auth: {
     user: MAIL_USER,
     pass: MAIL_PASSWORD
@@ -39,7 +39,26 @@ const sendCreditMail = async (email, payload) => {
     from: 'otp@example.com',
     to: email,
     subject: 'Paycore - Credit Alert',
-    text: `This is to notify you that a credit alert occurred on your account with us. Please review the details below: \nAccount: ${payload.account_number} \nAmount: ${payload.amount}`
+    text: `This is to notify you that a credit occurred on your account with us. Please review the details below: \nAccount: ${payload.account_number} \nAmount: ${payload.amount}`
+  };
+
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.log(error);
+    }
+    console.log('Email sent: ' + info.response);
+  });
+
+  return 'Credit alert sent successfully';
+};
+
+const sendDebitMail = async (email, payload) => {
+  const mailOptions = {
+    from: 'otp@example.com',
+    to: email,
+    subject: 'Paycore - Debit Alert',
+    text: `This is to notify you that a debit occurred on your account with us. Please review the details below: \nAccount: ${payload.account_number} \nAmount: ${payload.amount}`
   };
 
 
@@ -75,5 +94,6 @@ const reversalMail = async (email, payload) => {
 module.exports = {
   sendOtp,
   sendCreditMail,
-  reversalMail
+  sendDebitMail,
+  reversalMail,
 }

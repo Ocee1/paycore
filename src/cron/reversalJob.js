@@ -30,15 +30,17 @@ cron.schedule('*/2 * * * *', async () => {
 
     //log the transaction
     const trxData = {
-      userId: String(user.id),
+      userId: user.id,
       type: 'reversal',
       amount: failedTransfer.amount,
       status: 1,
       trx_ref: failedTransfer.trx_ref,
       payment_gateway_ref: failedTransfer.payment_gateway_ref,
-      balanceBefore: String(currentBalance),
-      BalanceAfter: String(newBalance)
+      balanceBefore: currentBalance,
+      BalanceAfter: newBalance
     };
+    const reverseTrx = await createTransaction(trxData);
+
 
     //user balance is 1st bal after
     let userBalance = newBalance;
@@ -78,9 +80,6 @@ cron.schedule('*/2 * * * *', async () => {
     await reversalMail(user.email, { account_number: userAccount.account_number, amount: userBalance })
 
     console.log(`Reversed transaction successful!`);
-
-    const failedTransactions = await getFailedTransactions(11, 'transfer');
-    
 
   } catch (error) {
     console.error('Error reversing transactions:', error);

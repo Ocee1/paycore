@@ -15,10 +15,10 @@ class Transaction extends Model {
       properties: {
         id: { type: 'integer' },
         userId: { type: 'integer' },
-        status: { type: 'integer', enum: [ 0, 1, 2, 3] },
+        status: { type: 'integer', enum: [ 0, 1, 2, 3, 11, 12] },
         amount: { type: 'number' },
         type: { type: 'string' },
-        trx_ref: { type: 'integer' },
+        trx_ref: { type: 'string' },
         payment_gateway_ref: { type: 'string' },
         fee: { type: 'number' },
         balanceBefore: { type: 'number'},

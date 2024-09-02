@@ -1,5 +1,5 @@
 const Account = require("../models/account");
-
+const moment = require("moment");
 
 
 const createAccount = async (data) => {
@@ -42,7 +42,8 @@ const findAccountByIdAndUpdate = async (data, id) => {
 };
 
 const removeAccount = async (id) => {
-    const account = await Account.query().deleteById(+id);
+    const deletedAt = moment().format('YYYY-MM-DD HH:mm:ss')
+    const account = await Account.query().patchAndFetchById(+id, { deleted_at: deletedAt });
     return account;
 };
 
