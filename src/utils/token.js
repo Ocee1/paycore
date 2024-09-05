@@ -82,7 +82,7 @@ const hashPassword = (password) => {
     return {
         hash: hash
     };
-}
+};
 
 
 const verifyPassword = (password, hash) => {

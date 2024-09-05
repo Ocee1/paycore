@@ -29,7 +29,12 @@ const removeBetPurchase = async (id) => {
 const getFailedBets = async () => {
     const result = await Betting.query().findOne({ status: 11 });
     return result;
-}
+};
+
+const updateBetByRef = async (trx_ref, data) => {
+    const result = await Betting.query().where('trx_ref', trx_ref).patch(data);
+    return result;
+};
 
 
 module.exports = {
@@ -39,4 +44,5 @@ module.exports = {
     updateBetById,
     removeBetPurchase,
     getFailedBets,
+    updateBetByRef
 }

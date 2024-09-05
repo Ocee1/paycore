@@ -1,4 +1,4 @@
-const { DATABASE_HOST, DATABASE_PASSWORD, DATABASE_USER, DATABASE_PORT } = require("./src/config/index");
+const { DATABASE_HOST, DATABASE_USER, DATABASE_PORT } = require("./src/config/index");
 
 
 module.exports = {
@@ -7,8 +7,8 @@ module.exports = {
     connection: {
       host: DATABASE_HOST,
       user: DATABASE_USER,
-      password: DATABASE_PASSWORD,
-      database: 'paycore',
+      password: '',
+      database: 'example',
       port: DATABASE_PORT,
     },
     migrations: {

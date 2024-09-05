@@ -6,7 +6,7 @@ const { getUserById } = require('../services/user.service');
 const { getAccountByUserId, updateByAccount, updateByUserId } = require('../services/accountService');
 const { findTransferByIdAndUpdate, getPendingTransfer, getFailedTransfer } = require('../services/transferService');
 const { reversalMail } = require('../mailer');
-const { getFailedElect, updateElecById } = require('../services/electricityService');
+const { getFailedElect, updateElecById, updateElecByRef } = require('../services/electricityService');
 
 cron.schedule('*/2 * * * *', async () => {
     console.log('Running cron job to reverse failed electricity payments');
@@ -51,6 +51,8 @@ cron.schedule('*/2 * * * *', async () => {
         //change the status to failed (2)
         //you can use the trx_ref to get the main transaction for the transfer and update to failed (2)
         const updatedTrx = await updateTransactionByRef(failedBill.merchant_ref, { status: 2 });
+
+        await updateElecByRef(failedBill.merchant_ref, { status: 2 });
 
         //send a mail to notify user about the reversal
 

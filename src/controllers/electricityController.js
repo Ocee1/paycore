@@ -9,7 +9,7 @@ const { createElecLog, updateElecById } = require("../services/electricityServic
 
 const electricityPayment = async (req, res) => {
     const { user, body } = req;
-    const { provider, meter_number, meter_type, phone_number, amount, transactionPin } = body;
+    const { provider, meter_number, meter_type, phone_number, amount, transaction_pin } = body;
 
     const userAccount = await getAccountByUserId(user.id);
 
@@ -22,7 +22,7 @@ const electricityPayment = async (req, res) => {
         };
 
         // verify Trx pin
-        const verifyPin = await verifyTransactionPin(user.id, transactionPin);
+        const verifyPin = await verifyTransactionPin(user.id, transaction_pin);
         if (!verifyPin) return res.status(400).json({ error: { message: "Incorrect transaction pin" } });
 
         //check if the amount is negative, if negative stop the process
@@ -127,12 +127,6 @@ const electricityPayment = async (req, res) => {
                 message: "Cable subscription transaction failed"
             });
         };
-
-        // await findTransactionByIdAndUpdate(transaction.id, { status: 3 });
-        // await updateElecById(savedTable.id, {
-        //     status: 3,
-        //     reference: response.data.reference,
-        // });
 
         await sendDebitMail(user.email, { account: userAccount.account_number, amount });
 

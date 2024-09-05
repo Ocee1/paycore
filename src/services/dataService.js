@@ -30,7 +30,12 @@ const removeDataBundle = async (id) => {
 const getFailedData = async () => {
     const result = await DataBundle.query().findOne({ status: 11 });
     return result;
-}
+};
+
+const updateDataByRef = async (trx_ref, data) => {
+    const result = await DataBundle.query().where('trx_ref', trx_ref).patch(data);
+    return result;
+};
 
 
 module.exports = {
@@ -39,5 +44,6 @@ module.exports = {
     getDataByUserId,
     updateDataById,
     removeDataBundle,
-    getFailedData
+    getFailedData,
+    updateDataByRef
 }

@@ -9,7 +9,7 @@ const { updateAirtimeById, createairtimeLog } = require("../services/airtimeServ
 
 const purchaseAirtime = async (req, res) => {
     const { user, body } = req;
-    const { amount, phone_number, network, transactionPin } = body;
+    const { amount, phone_number, network, transaction_pin } = body;
 
     const userAccount = await getAccountByUserId(user.id);
 
@@ -22,7 +22,7 @@ const purchaseAirtime = async (req, res) => {
         };
 
         // verify Trx pin
-        const verifyPin = await verifyTransactionPin(user.id, transactionPin);
+        const verifyPin = await verifyTransactionPin(user.id, transaction_pin);
         if (!verifyPin) return res.status(400).json({ error: { message: "Incorrect transaction pin" } });
 
         //check if the amount is negative, if negative stop the process

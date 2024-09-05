@@ -9,11 +9,11 @@ const { sendDebitMail } = require("../mailer");
 
 const purchaseData = async (req, res) => {
     const { user, body } = req;
-    const { amount, phone_number, code, provider_code, network, transactionPin } = body;
+    const { amount, phone_number, code, provider_code, network, transaction_pin } = body;
 
     const userAccount = await getAccountByUserId(user.id);
     // verify Trx pin
-    const verifyPin = await verifyTransactionPin(user.id, transactionPin);
+    const verifyPin = await verifyTransactionPin(user.id, transaction_pin);
     if (!verifyPin) return res.status(400).json({ error: { message: "Incorrect transaction pin" } });
 
     try {

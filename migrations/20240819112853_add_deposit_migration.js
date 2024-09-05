@@ -12,6 +12,9 @@ exports.up = function (knex) {
         table.integer('status').notNullable().defaultTo(0);
         table.string('account_number').notNullable();
         table.json('source').notNullable();
+        table.timestamp('created_at', { precision: 6 }).defaultTo(knex.fn.now(6));
+        table.timestamp('updated_at', { precision: 6 }).defaultTo(knex.fn.now(6));
+        table.timestamp('deleted_at', { precision: 6 }).nullable();
     });
 };
 

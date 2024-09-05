@@ -3,8 +3,9 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-    return knex.schema.alterTable('transfers', function (table) {
-        table.string('payment_gateway_ref').alter();
+    return knex.schema.table('transfers', function (table) {
+        table.string('payment_gateway_ref');
+        table.string('trx_ref');
     })
 };
 
@@ -14,6 +15,7 @@ exports.up = function (knex) {
  */
 exports.down = function (knex) {
     return knex.schema.alterTable('transfers', function (table) {
-        table.integer('payment_gateway_ref').alter();
+        table.dropColumn('payment_gateway_ref');
+        table.dropColumn('trx_ref');
     })
 };

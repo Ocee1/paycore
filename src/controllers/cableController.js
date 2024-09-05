@@ -10,7 +10,7 @@ const { updateCableById, createCableLog } = require("../services/cableService");
 
 const cableSubs = async (req, res) => {
     const { user, body } = req;
-    const { provider, code, smart_card_number, phone_number, amount, transactionPin } = body;
+    const { provider, code, smart_card_number, phone_number, amount, transaction_pin } = body;
 
     const userAccount = await getAccountByUserId(user.id);
 
@@ -23,7 +23,7 @@ const cableSubs = async (req, res) => {
         };
 
         // verify Trx pin
-        const verifyPin = await verifyTransactionPin(user.id, transactionPin);
+        const verifyPin = await verifyTransactionPin(user.id, transaction_pin);
         if (!verifyPin) return res.status(400).json({ error: { message: "Incorrect transaction pin" } });
 
         //check if the amount is negative, if negative stop the process

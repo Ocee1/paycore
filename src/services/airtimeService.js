@@ -29,7 +29,12 @@ const removeAirtimePurchase = async (id) => {
 const getFailedAirtime = async () => {
     const result = await Airtime.query().findOne({ status: 11 });
     return result;
-}
+};
+
+const updateAirtimeByRef = async (trx_ref, data) => {
+    const result = await Airtime.query().where('trx_ref', trx_ref).patch(data);
+    return result;
+};
 
 
 module.exports = {
@@ -38,5 +43,6 @@ module.exports = {
     getAirtimeByUserId,
     updateAirtimeById,
     removeAirtimePurchase,
-    getFailedAirtime
+    getFailedAirtime,
+    updateAirtimeByRef
 }

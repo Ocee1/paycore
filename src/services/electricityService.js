@@ -44,6 +44,11 @@ const getPendingElecBill = async (ref) => {
     return result;
 };
 
+const updateElecByRef = async (trx_ref, data) => {
+    const result = await Electricity.query().where('trx_ref', trx_ref).patch(data);
+    return result;
+};
+
 
 
 module.exports = {
@@ -54,5 +59,6 @@ module.exports = {
     removeElecPurchase,
     getFailedElect,
     getElecByTrxRef,
-    getPendingElecBill
+    getPendingElecBill,
+    updateElecByRef
 }

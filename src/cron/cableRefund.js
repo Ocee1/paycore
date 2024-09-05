@@ -5,7 +5,7 @@ const { reversalMail } = require('../mailer');
 const { getAccountByUserId, updateByUserId } = require('../services/accountService');
 const { createTransaction, findTransactionByIdAndUpdate, updateTransactionByRef } = require('../services/transactionService');
 const { getUserById } = require('../services/user.service');
-const { updateCableById, getFailedCableSub } = require('../services/cableService');
+const { updateCableById, getFailedCableSub, updateCableByRef } = require('../services/cableService');
 
 cron.schedule('* * * * *', async () => {
     console.log('Running cron job to reverse failed cable subscriptions');
@@ -51,6 +51,8 @@ cron.schedule('* * * * *', async () => {
         //you can use the trx_ref to get the main transaction for the transfer and update to failed (2)
         const updatedTrx = await findTransactionByIdAndUpdate(reverseTrx.id, { status: 3 });
         await updateTransactionByRef(failedCablePurchase.merchant_ref, { status: 2 });
+
+        await updateCableByRef(failedCablePurchase.merchant_ref, { status: 2 });
        
 
         //send a mail to notify user about the reversal

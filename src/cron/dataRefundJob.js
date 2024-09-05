@@ -2,7 +2,7 @@
 const cron = require('node-cron');
 
 const { reversalMail } = require('../mailer');
-const { getFailedData, updateDataById } = require('../services/dataService');
+const { getFailedData, updateDataById, updateDataByRef } = require('../services/dataService');
 const { getAccountByUserId, updateByUserId } = require('../services/accountService');
 const { createTransaction, findTransactionByIdAndUpdate, updateTransactionByRef } = require('../services/transactionService');
 const { getUserById } = require('../services/user.service');
@@ -51,6 +51,7 @@ cron.schedule('* * * * *', async () => {
         //you can use the trx_ref to get the main transaction for the transfer and update to failed (2)
         const updatedTrx = await findTransactionByIdAndUpdate(reverseTrx.id, { status: 3 });
         await updateTransactionByRef(failedDataPurchase.merchant_ref, { status: 2 });
+        await updateDataByRef(failedDataPurchase.merchant_ref, { status: 2 });
        
 
         //send a mail to notify user about the reversal

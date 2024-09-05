@@ -6,7 +6,7 @@ const { getFailedData, updateDataById } = require('../services/dataService');
 const { getAccountByUserId, updateByUserId } = require('../services/accountService');
 const { createTransaction, findTransactionByIdAndUpdate, updateTransactionByRef } = require('../services/transactionService');
 const { getUserById } = require('../services/user.service');
-const { getFailedAirtime, updateAirtimeById } = require('../services/airtimeService');
+const { getFailedAirtime, updateAirtimeById, updateAirtimeByRef } = require('../services/airtimeService');
 
 cron.schedule('* * * * *', async () => {
     console.log('Running cron job to reverse failed Airtime purchases');
@@ -52,6 +52,7 @@ cron.schedule('* * * * *', async () => {
         //you can use the trx_ref to get the main transaction for the transfer and update to failed (2)
         const updatedTrx = await findTransactionByIdAndUpdate(reverseTrx.id, { status: 3 });
         await updateTransactionByRef(failedAirtimePurchase.merchant_ref, { status: 2 });
+        await updateAirtimeByRef(failedAirtimePurchase.merchant_ref, { status: 2 });
        
 
         //send a mail to notify user about the reversal

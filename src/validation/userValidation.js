@@ -2,9 +2,10 @@ const Joi = require('joi');
 
 const signupValidation = (data) => {
     const schema = Joi.object({
-        firstName: Joi.string(),
-        lastName: Joi.string(),
+        first_name: Joi.string(),
+        last_name: Joi.string(),
         email: Joi.string().email().trim().required(),
+        phone: Joi.string().required(),
         password: Joi.string().min(6).required()
             .regex(/[a-z]/, 'at least one letter')
             .regex(/[0-9]/, 'at least one number'),

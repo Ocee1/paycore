@@ -10,7 +10,7 @@ const { updateBetById, createBetLog } = require("../services/bettingService");
 
 const betTopUp = async (req, res) => {
     const { user, body } = req;
-    const { type, customer_id, name, amount, transactionPin } = body;
+    const { type, customer_id, name, amount, transaction_pin } = body;
 
     const userAccount = await getAccountByUserId(user.id);
 
@@ -23,7 +23,7 @@ const betTopUp = async (req, res) => {
         };
 
         // verify Trx pin
-        const verifyPin = await verifyTransactionPin(user.id, transactionPin);
+        const verifyPin = await verifyTransactionPin(user.id, transaction_pin);
         if (!verifyPin) return res.status(400).json({ error: { message: "Incorrect transaction pin" } });
 
         //check if the amount is negative, if negative stop the process
@@ -33,6 +33,9 @@ const betTopUp = async (req, res) => {
                 "message": "Invalid amount."
             })
         }
+
+        const currentBalance = userAccount.balance;
+        if (currentBalance < amount) return res.status(400).json({ error: { message: "Insufficient funds" } });
 
         const validationResponse = await axios(atlasConfig({
             type,
@@ -53,8 +56,7 @@ const betTopUp = async (req, res) => {
             });
         };
 
-        const currentBalance = userAccount.balance;
-        if (currentBalance < amount) return res.status(400).json({ error: { message: "Insufficient funds" } });
+        
         const trx_ref = generateReference();
 
         const newBalance = currentBalance - amount;

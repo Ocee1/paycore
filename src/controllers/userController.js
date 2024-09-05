@@ -1,9 +1,9 @@
 const axios = require("axios");
 const { ATLAS_SECRET, CREATE_ACCOUNT_URL, atlasConfig, } = require("../config/index");
 const { sendOtp } = require("../mailer");
-const { createAccount, getAccountByUserId, updateByAccount } = require("../services/accountService");
+const { createAccount, getAccountByUserId } = require("../services/accountService");
 const { createUser, getUserById, findByIdAndUpdate, getUserByEmail, } = require("../services/user.service");
-const { generateOtp, createToken, hashPassword, verifyPassword, verifyOtp, saveOtp } = require("../utils/token");
+const { generateOtp, createToken, hashPassword, verifyPassword, verifyOtp } = require("../utils/token");
 const { loginValidation, signupValidation, transactionPinValidation } = require("../validation/userValidation");
 
 
@@ -14,16 +14,16 @@ const registerUser = async (req, res) => {
     try {
         const { error } = signupValidation(body);
 
-        if (error) return res.status(400).json({ error: 'Bad request' });
+        if (error) return res.status(400).json({ error: error.message });
 
         const isUser = await getUserByEmail(body.email);
         if (isUser) return res.status(400).json({ message: 'User already exists' });
 
         const { hash } = await hashPassword(body.password);
         const data = {
-            first_name: body.firstName,
-            last_name: body.lastName,
-            phone: '',
+            first_name: body.first_name,
+            last_name: body.last_name,
+            phone: body.phone,
             amount: 0,
             email: body.email,
         };
@@ -35,9 +35,10 @@ const registerUser = async (req, res) => {
         const { account_number, bank, customer } = accountRes.data.data;
 
         const user = await createUser({
-            first_name: body.firstName,
-            last_name: body.lastName,
+            first_name: body.first_name,
+            last_name: body.last_name,
             email: body.email,
+            phone: body.phone,
             password: hash,
         });
 
@@ -83,8 +84,7 @@ const loginUser = async (req, res) => {
         }
 
         const otp = await generateOtp(isUser.id);
-        const toksOtp = await saveOtp(isUser.id, otp);
-        if (!toksOtp) {
+        if (!otp) {
             return res.status(400).json({ error: "Error saving OTP to DB" })
         }
 

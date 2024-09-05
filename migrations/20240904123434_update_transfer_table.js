@@ -3,7 +3,9 @@
  * @returns { Promise<void> }
  */
 exports.up = function(knex) {
-  
+  return knex.schema.table('transfers', function (table) {
+    table.double('fee').notNullable();
+  })
 };
 
 /**
@@ -11,5 +13,7 @@ exports.up = function(knex) {
  * @returns { Promise<void> }
  */
 exports.down = function(knex) {
-  
+  return knex.schema.table('transfers', function (table) {
+    table.dropColumn('fee');
+  })
 };

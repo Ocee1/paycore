@@ -13,11 +13,14 @@ cron.schedule('*/2 * * * *', async () => {
   try {
     //Reversal Cron
     //Selecting a transfer with status 11
+    
+
     const failedTransfer = await getFailedTransfer();
     if (!failedTransfer) {
       return 'No failed Txns'
     }
 
+    const user = await getUserById(failedTransfer.userId);
     //update transfer status to 12 (processing reversal)
     await findTransferByIdAndUpdate({ status: 12 }, failedTransfer.id);
 
@@ -45,12 +48,14 @@ cron.schedule('*/2 * * * *', async () => {
     //user balance is 1st bal after
     let userBalance = newBalance;
 
+    
     //check if the fee column on the transfer is greater than 0
     if (failedTransfer.fee > 0) {
       //if transfer fee exists, 1st bal after becomes 2nd bal before, add 1st bal after to fee amount to get the 2nd bal after
       //log the transaction
       const secondBalance = userBalance + failedTransfer.fee;
       const creditAmount = failedTransfer.amount + failedTransfer.fee;
+      
       const feeTrx = {
         userId: user.id,
         type: 'reversal',
@@ -76,7 +81,7 @@ cron.schedule('*/2 * * * *', async () => {
 
     //send a mail to notify user about the reversal
 
-    const user = await getUserById(failedTransfer.userId);
+    
     await reversalMail(user.email, { account_number: userAccount.account_number, amount: userBalance })
 
     console.log(`Reversed transaction successful!`);

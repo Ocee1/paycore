@@ -11,11 +11,11 @@ const SERVER_HOSTNAME = process.env.SERVER_HOSTNAME || envConfig.SERVER_HOSTNAME
 
 const LOG_DIR = process.env.LOG_DIR || envConfig.LOG_DIR;
 
-const DATABASE_USER = process.env.DATABASE_USER || envConfig.DATABASE_USER
-const DATABASE_PASSWORD = process.env.DATABASE_PASSWORD || envConfig.DATABASE_PASSWORD
-const DATABASE_NAME = process.env.DATABASE_NAME || envConfig.DATABASE_NAME
-const DATABASE_HOST = process.env.DATABASE_HOST || envConfig.DATABASE_HOST
-const DATABASE_PORT = process.env.DATABASE_PORT || envConfig.DATABASE_PORT
+const DATABASE_USER = envConfig.DATABASE_USER
+const DATABASE_PASSWORD = envConfig.DATABASE_PASSWORD
+const DATABASE_NAME = envConfig.DATABASE_NAME
+const DATABASE_HOST = envConfig.DATABASE_HOST
+const DATABASE_PORT = envConfig.DATABASE_PORT
 const PORT = process.env.PORT || envConfig.PORT
 const ATLAS_SECRET = process.env.ATLAS_SECRET || envConfig.ATLAS_SECRET;
 const CREATE_ACCOUNT_URL = process.env.CREATE_ACCOUNT_URL || envConfig.CREATE_ACCOUNT_URL

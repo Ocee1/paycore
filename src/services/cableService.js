@@ -29,7 +29,12 @@ const removeCablePurchase = async (id) => {
 const getFailedCableSub = async () => {
     const result = await Cable.query().findOne({ status: 11 });
     return result;
-}
+};
+
+const updateCableByRef = async (trx_ref, data) => {
+    const result = await Cable.query().where('trx_ref', trx_ref).patch(data);
+    return result;
+};
 
 
 module.exports = {
@@ -38,5 +43,6 @@ module.exports = {
     getCableByUserId,
     updateCableById,
     removeCablePurchase,
-    getFailedCableSub
+    getFailedCableSub,
+    updateCableByRef
 }

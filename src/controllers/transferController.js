@@ -10,7 +10,7 @@ const { verifyTransactionPin } = require("../services/transactionService");
 
 
 const createTransfer = async (req, res, next) => {
-    const { amount, transactionPin, account_number, bank, bank_code, narration, currency } = req.body;
+    const { amount, transaction_pin, account_number, bank, bank_code, narration, currency } = req.body;
     const user = req.user;
 
     try {
@@ -24,7 +24,7 @@ const createTransfer = async (req, res, next) => {
 
         const senderAccount = await getAccountByUserId(user.id);
         // verify Trx pin
-        const verifyPin = await verifyTransactionPin(user.id, transactionPin);
+        const verifyPin = await verifyTransactionPin(user.id, transaction_pin);
         if (!verifyPin) return res.status(400).json({ error: { message: "Incorrect transaction pin" } });
 
         //check if the amount is negative, if negative stop the process
@@ -87,7 +87,3 @@ const createTransfer = async (req, res, next) => {
 
 
 module.exports = { createTransfer };
-
-
-//fetch deposit endpoints for a logged in user
-//fetch transaction for a logged in user
