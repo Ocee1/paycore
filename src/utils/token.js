@@ -99,4 +99,16 @@ function generateReference() {
     return code;
 };
 
-module.exports = { createToken, verifyToken, generateOtp, verifyOtp, hashPassword, verifyPassword, saveOtp, generateReference }
+const generateBulkId = () => {
+    // let code = '';
+    let possible = 2147483647;
+    // let length = 10; // Max length for a BIGINT
+    // for (let i = 0; i < length; i++) {
+    //     code += possible.charAt(Math.floor(Math.random() * possible.length));
+    // }
+    const code = Math.floor(Math.random() * possible); 
+    return code
+};
+
+
+module.exports = { createToken, generateBulkId, verifyToken, generateOtp, verifyOtp, hashPassword, verifyPassword, saveOtp, generateReference }

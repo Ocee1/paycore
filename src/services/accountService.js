@@ -47,6 +47,14 @@ const removeAccount = async (id) => {
     return account;
 };
 
+const checkUserBalance = async (amount, id) => {
+    const senderAccount = await getAccountByUserId(id); 
+    const userBalance = senderAccount.balance;
+    const funds =  userBalance > amount;
+    return funds;
+};
+
+
 module.exports = {
     createAccount,
     getAccountById,
@@ -56,5 +64,6 @@ module.exports = {
     getAccount,
     updateByAccount,
     getAccountByUserId,
-    updateByUserId
+    updateByUserId,
+    checkUserBalance,
 };

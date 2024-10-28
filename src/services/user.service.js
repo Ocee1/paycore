@@ -33,7 +33,7 @@ const removeUser = async (id) => {
 const saveToken = async (userId, token) => {
 
 
-    const expiresAt = moment().add(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+    const expiresAt = moment().add(1, 'days').format('YYYY-MM-DD HH:mm:ss');
     console.log(`from the DB i/o ============= ${expiresAt}`)
 
     const authToken = await Token.query().insert({

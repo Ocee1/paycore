@@ -8,7 +8,7 @@ module.exports = {
       host: DATABASE_HOST,
       user: DATABASE_USER,
       password: '',
-      database: 'example',
+      database: 'paycore',
       port: DATABASE_PORT,
     },
     migrations: {

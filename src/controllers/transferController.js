@@ -45,7 +45,7 @@ const createTransfer = async (req, res, next) => {
                 "message": "Account not found"
             });
         }
-        //select the account details and the get the current user balance
+        //select the account details and get the current user balance
         const currentBalance = senderAccount.balance;
 
         //check to make sure the user balance can carry the transfer

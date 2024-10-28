@@ -37,9 +37,31 @@ const getFailedTransactions = async (status, type) => {
     })
 };
 
+const findTransactions = async (data) => {
+    const result = await Transaction.query().where(data);
+    return result;
+};
+
 const updatePendingTrxByRef = async (trx_ref, data) => {
     const result = await Transaction.query()
     .where('trx_ref', trx_ref)
+    .andWhere('status', 1)
+    .patch(data);
+
+    return result;
+}
+const updateTxnByBulkId = async (bulk_transfer_id, data) => {
+    const result = await Transaction.query()
+    .where('bulk_transfer_id', bulk_transfer_id)
+    .andWhere('status', 0)
+    .patch(data);
+
+    return result;
+};
+
+const updateBulkId = async (bulk_transfer_id, data) => {
+    const result = await Transaction.query()
+    .where('bulk_transfer_id', bulk_transfer_id)
     .andWhere('status', 1)
     .patch(data);
 
@@ -54,7 +76,9 @@ const verifyTransactionPin = async (userId, transactionPin) => {
     }
 
     return (user.transaction_pin === transactionPin);
-}
+};
+
+
 
 module.exports = {
     createTransaction,
@@ -65,5 +89,8 @@ module.exports = {
     getFailedTransactions,
     updateTransactionByRef,
     updatePendingTrxByRef,
-    verifyTransactionPin
+    verifyTransactionPin,
+    findTransactions,
+    updateTxnByBulkId,
+    updateBulkId
 }

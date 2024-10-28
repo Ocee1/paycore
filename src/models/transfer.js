@@ -12,7 +12,7 @@ class Transfer extends Model {
   static get jsonSchema() {
     return {
       type: 'object',
-      required: ['userId', 'status', 'amount'],
+      required: [],
       properties: {
         id: { type: 'integer' }, 
         userId: { type: 'integer' },
@@ -26,6 +26,7 @@ class Transfer extends Model {
         bank_code: { type: 'string' },
         account_number: { type: 'string' },
         account_name: { type: 'string' },
+        bulk_transfer_id: { type: ['integer', 'null'] },
         narration: { type: 'string' },
         meta_data: { type: 'object' },
         createdAt: { type: 'string', format: 'date-time' },

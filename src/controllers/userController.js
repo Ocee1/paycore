@@ -60,6 +60,7 @@ const registerUser = async (req, res) => {
 
     } catch (error) {
         res.status(500).json({ error: 'Error occured while processing your request', message: error.message })
+        console.log(error)
     }
 };
 

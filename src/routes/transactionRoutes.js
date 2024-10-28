@@ -6,6 +6,7 @@ const betTopUp = require('../controllers/bettingController');
 const electricityPayment = require('../controllers/electricityController');
 const cableSubs = require('../controllers/cableController');
 const purchaseAirtime = require('../controllers/airtimeController');
+const { createBulkTransfer } = require('../controllers/bulkTransferController');
 
 
 const router = express.Router();
@@ -16,8 +17,7 @@ router.post('/purchase-airtime', Auth.authorize, purchaseAirtime);
 router.post('/bet-topup', Auth.authorize, betTopUp);
 router.post('/electricity-bill', Auth.authorize, electricityPayment);
 router.post('/cable', Auth.authorize, cableSubs);
-
-
+router.post('/bulk-transfer', Auth.authorize, createBulkTransfer);
 
 
 

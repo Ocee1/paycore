@@ -6,7 +6,7 @@ const Deposit = require('../models/deposit');
 const { getAccount, updateByAccount } = require('../services/accountService');
 const { getDepositBySessionId, createDeposit } = require('../services/depositService');
 const { createTransaction, updateTransactionByRef } = require('../services/transactionService');
-const { findTransferByIdAndUpdate, updateTransferByRef, updatePendingTrfByRef, getTrfBySessionId } = require('../services/transferService');
+const { findTransferByIdAndUpdate, updateTransferByRef, updatePendingTrfByRef, getTrfBySessionId, checkForBulkAndUpdateStatus, getTransferByTrxRef } = require('../services/transferService');
 const { getUserByEmail, getUserById } = require('../services/user.service');
 const { updateWebhook, getWebhook, createWebhook } = require('../services/webHook');
 const { getElecByTrxRef, getPendingElecBill, updateElecById } = require('../services/electricityService');
@@ -79,6 +79,16 @@ const processDeposit = async (payload) => {
         }
 
         const accountData = await getAccount(payload.account_number);
+        if (!accountData) {
+            console.log({
+                status: 'fail',
+                messsage: 'Deposit made on merchant collection account.'
+            })
+            return {
+                status: 'fail',
+                messsage: 'Deposit made on merchant collection account.'
+            }
+        }
         const userId = accountData.userId;
 
         const user = await getUserById(userId);
@@ -138,24 +148,41 @@ const processTransferHook = async (payload) => {
         status = payload.meta.status;
     }
 
-    if (status === 'failed') {
+    if (status === 'fail') {
         await updatePendingTrfByRef(payload, { status: 11, meta_data: meta });
         await updateTransactionByRef(merchant_ref, { status: 2 });
         console.log({ status: "Failed", Message: "Transfer failed" })
         return "Transaction failed"
+    }
+    await updatePendingTrfByRef(merchant_ref, {
+        status: 3,
+        meta_data: meta,
+        payment_gateway_ref: trx_ref
+    });
+
+    const trfUpdate = await getTransferByTrxRef(merchant_ref)
+
+
+    if (trfUpdate.bulk_transfer_id) {
+        const bulk_id = trfUpdate.bulk_transfer_id;
+        const tryBulk = checkForBulkAndUpdateStatus(bulk_id);
+        if (!tryBulk) {
+            console.log('bulk not completed!!!!!')
+        }
     } else {
-        await updatePendingTrfByRef(merchant_ref, {
-            status: 3,
-            meta_data: meta,
-            payment_gateway_ref: trx_ref
-        });
-        await updateTransactionByRef(merchant_ref, {
+        const ment = await updateTransactionByRef(merchant_ref, {
             status: 3,
             payment_gateway_ref: trx_ref
         });
-        console.log({ status: "Successful", Message: "Transfer succesful", trx_ref })
-        return "Transfer successful"
-    };
+    }
+    await updateTransactionByRef(merchant_ref, {
+        status: 3,
+        payment_gateway_ref: trx_ref
+    });
+
+    console.log({ status: "Successful", Message: "Transfer succesful", trx_ref })
+    return "Transfer successful"
+
 };
 
 const processElectricity = async (payload) => {
@@ -170,14 +197,14 @@ const processElectricity = async (payload) => {
 
     if (status === 'failed') {
         await updateElecById({ status: 11, reference, }, pendingBill.id);
-        await updateTransactionByRef(merchant_ref, { 
-            status: 2, 
+        await updateTransactionByRef(merchant_ref, {
+            status: 2,
             payment_gateway_ref: reference,
             customer_name,
             customer_address,
             reference,
             meta_data: meta
-         });
+        });
         console.log({ status: "Failed", Message: "Electricity payment failed" })
         return "Electricity payment failed"
     } else {
@@ -206,6 +233,6 @@ const validateSignature = async (secret) => {
 
 module.exports = {
     setWebhookLink,
-    webhooks,
+    webhooks
 };
 

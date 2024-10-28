@@ -81,7 +81,6 @@ cron.schedule('* * * * *', async () => {
       return "Error in creating transaction";
     }
 
-
     const data = {
       amount: pendingTransfer.amount,
       bank: pendingTransfer.bank,
@@ -98,7 +97,7 @@ cron.schedule('* * * * *', async () => {
 
     //if response from atlas is failed, u can update transfer db with status 11(status for initiating reversal)
     if (accountRes.data.status !== 'success') {
-      await Transaction.query().patch({ status: 2 }).where({ id: pendingTransfer.transactionId });
+      await Transaction.query().patch({ status: 2 }).where({ id: pendingTransfer.userId });
       await Transfer.query().patch({ status: 11 }).where({ id: pendingTransfer.id });
       console.log('error creating transfer on atlas')
       return 'error creating transfer on atlas'
