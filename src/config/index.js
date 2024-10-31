@@ -22,6 +22,7 @@ const CREATE_ACCOUNT_URL = process.env.CREATE_ACCOUNT_URL || envConfig.CREATE_AC
 const GET_ACCOUNT_URL = process.env.GET_ACCOUNT_URL || envConfig.GET_ACCOUNT_URL
 const GET_COLLECTIONS_URL = process.env.GET_ACCOUNT_URL || envConfig.GET_COLLECTIONS_URL;
 const CREATE_TRANSFER_URL = process.env.CREATE_TRANSFER_URL || envConfig.CREATE_TRANSFER_URL;
+const BULK_TRANSFER_URL = process.env.BULK_TRANSFER_URL || envConfig.BULK_TRANSFER_URL;
 const RECHARGE_AIRTIME_URL = process.env.RECHARGE_AIRTIME_URL || envConfig.RECHARGE_AIRTIME_URL;
 const RECHARGE_DATA_URL = process.env.RECHARGE_DATA_URL || envConfig.RECHARGE_DATA_URL;
 const VALIDATE_BET_ACCOUNT_URL = process.env.VALIDATE_BET_ACCOUNT_URL|| envConfig.VALIDATE_BET_ACCOUNT_URL;
@@ -38,6 +39,11 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || envConfig.WEBHOOK_SECRET
 const WEBHOOK_URL = process.env.WEBHOOK_URL || envConfig.WEBHOOK_URL
 const AUTH_SECRET = process.env.AUTH_SECRET || envConfig.AUTH_SECRET
 
+const headers = {
+  'Content-Type': 'application/x-www-form-urlencoded',
+  'Authorization': `Bearer ${ATLAS_SECRET}`
+};
+
 const atlasConfig = (data, reqUrl, method, secret) => {
   const accountData = qs.stringify(data);
 
@@ -51,7 +57,8 @@ const atlasConfig = (data, reqUrl, method, secret) => {
     data: data
   };
   return config;
-}
+};
+
 const corsOptions = {
   origin: '*',
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -97,6 +104,7 @@ module.exports = {
   SUBSCRIBE_CABLE_URL,
   VALIDATE_METER_NUMBER,
   PURCHASE_ELECTRICITY,
+  BULK_TRANSFER_URL,
   MAIL_PASSWORD,
   MAIL_PORT,
   MAIL_USER,
@@ -108,5 +116,6 @@ module.exports = {
   WEBHOOK_URL,
   AUTH_SECRET,
   getTransactionFee,
-  PORT
+  PORT,
+  headers
 }

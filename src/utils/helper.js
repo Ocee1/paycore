@@ -1,4 +1,5 @@
 const { client } = require("../config/redisConfig");
+// const util = require('util');
 
 const saveArrayToRedis = async (key, array) => {
     try {
@@ -22,7 +23,32 @@ const getArrayFromRedis = async (key) => {
     }
 };
 
+
+
+// Promisify Redis commands for better async/await handling
+const sAddAsync = async (key, data) => {
+    try {
+        const result = await client.sAdd(key, data)
+        return result;
+    } catch (err) {
+        console.error('Error retrieving array from Redis:', err);
+        return null;
+    }
+}
+
+const sIsMemberAsync = async (key) => {
+    try {
+        const result = await client.sIsMember(key);
+        return result;
+    } catch (err) {
+        console.error('Error retrieving bulk from Redis:', err);
+        return null;
+    }
+}
+
 module.exports = {
     saveArrayToRedis,
-    getArrayFromRedis
+    getArrayFromRedis,
+    sAddAsync,
+    sIsMemberAsync
 };

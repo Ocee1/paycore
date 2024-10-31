@@ -1,6 +1,6 @@
 const Redis = require('ioredis');
-const redis = require('redis');
-const client = redis.createClient();
+const { createClient } = require('redis');
+const client = createClient();
 const redisConnection = new Redis({
     host: "localhost",
     port: 6379,
