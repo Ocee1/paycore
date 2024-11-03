@@ -6,7 +6,7 @@ const { transferQueue } = require('../transfer/transferQueue');
 const { generateReference } = require('../../utils/token');
 const { default: axios } = require('axios');
 const { atlasConfig, GET_ACCOUNT_URL, ATLAS_SECRET } = require('../../config');
-const { getArrayFromRedis, saveArrayToRedis } = require('../../utils/helper');
+const { saveArrayToRedis, addItemToRedisList, getArrayFromRedis } = require('../../utils/helper');
 const { bulkInsertTransfers } = require('../../services/transferService');
 
 
@@ -14,52 +14,77 @@ const { bulkInsertTransfers } = require('../../services/transferService');
 const connnr = { connection: redisConnection }
 const checkAccountWorker = new Worker('checkAccountQueue', async (job) => {
     try {
-        const { userId, redisKey, bulk_transfer_id } = job.data;
+        const { userId, transfer, bulk_transfer_id, transferIndex, length } = job.data;
         // const userAccount = await getAccountByUserId(userId);
 
-        const transfers = await getArrayFromRedis(redisKey);
-        
+        // const transfers = await getArrayFromRedis(redisKey);
+        //
+
         // verify accounts for each transfer
-        const verifiedTransfers = await Promise.all(
-            transfers.map(transfer => verifyAccount(transfer))
-        );
-        
+        // const verifiedTransfers = await Promise.all(
+        //     transfers.map(transfer => verifyAccount(transfer))
+        // );
+
+        const vAccounts = await verifyAccount(transfer);
+
         // Filter results for failed and successful verifications
-        const passedVerification = verifiedTransfers.filter(transfer => transfer.isValid);
-        const failedVerification = verifiedTransfers.filter(transfer => !transfer.isValid);
-        
-        if (failedVerification.length > 0) {
-            console.log('Some transfers failed verification:', failedVerification);
+        let passedVerification;
+        let failedVerification;
+
+        const passedVerificationKey = `passedVerification:${bulk_transfer_id}`
+        const failedKey = `failedTranfer:${bulk_transfer_id}`
+        if (vAccounts.isValid && transferIndex === 0) {
+            console.log('This account passed verification:', vAccounts);
+            await saveArrayToRedis(passedVerificationKey, [vAccounts.transfer]);
+            passedVerification = vAccounts.transfer;
+        } else if (!vAccounts.isValid && transferIndex === 0) {
+            await saveArrayToRedis(failedKey, [vAccounts.transfer]);
+            failedVerification = vAccounts.transfer;
+            console.log('This account failed verification:', failedVerification);
+        } else if (vAccounts.isValid && transferIndex > 1) {
+            await addItemToRedisList(passedVerificationKey, transfer)
+            passedVerification = vAccounts.transfer;
         } else {
-            console.log('All transfers passed verification:', passedVerification);
+            await addItemToRedisList(failedKey, transfer)
+            failedVerification = vAccounts.transfer;
         }
 
-        const newVerifiedArray = passedVerification.map(trf => {
-            trf.transfer.trx_ref = generateReference();
-            trf.transfer.status = 0;
-            trf.transfer.bulk_transfer_id = bulk_transfer_id;
-            trf.transfer.userId = userId;
-        
-            return trf.transfer; // Return the modified transfer object
-        });
+        // const newVerifiedArray = {
+        //     ...passedVerification,
+        //     trx_ref: generateReference(),
+        //     status: 0,
+        //     bulk_transfer_id: bulk_transfer_id,
+        //     userId: userId,
+        // };
 
         // add failed and successful verification to redis
-        const failedKey = `failedTranfer:${bulk_transfer_id}`
-        const passedVerificationKey = `passedVerification:${bulk_transfer_id}`
-        await saveArrayToRedis(failedKey, failedVerification);
-        await saveArrayToRedis(passedVerificationKey, passedVerification);
+
+
+        // await saveArrayToRedis(failedKey, failedVerification);
+        // await saveArrayToRedis(passedVerificationKey, passedVerification);
 
         // console.log(`passedd verification tfssss:   ${newVerifiedArray}`)
         // bulk save succesfully verified transfers 
-        const savedTransfers = await bulkInsertTransfers(newVerifiedArray);
-        if (!savedTransfers) {
-            console.log({
-                status: 'fail',
-                message: 'Error saving transfers to database'
-            })
+
+
+        if (transferIndex === length - 1) {
+            const verifiedTrfs = await getArrayFromRedis(passedVerificationKey)
+            const updatedTransfers = verifiedTrfs.map(trf => ({
+                ...trf,
+                trx_ref: generateReference(),
+                status: 0,
+                bulk_transfer_id: bulk_transfer_id,
+                userId: userId
+            }));
+            const savedTransfers = await bulkInsertTransfers(updatedTransfers);
+            if (!savedTransfers) {
+                console.log({
+                    status: 'fail',
+                    message: 'Error saving transfers to database'
+                })
+            };
+            await transferQueue.add('transferQueue', { bulk_transfer_id, userId, failedKey, passedVerificationKey });
         };
-        
-        await transferQueue.add('transferQueue', { bulk_transfer_id, userId, failedKey, passedVerificationKey });
 
         console.log("Transfers successfully queued");
     } catch (error) {
@@ -73,7 +98,7 @@ const verifyAccount = async (transfer) => {
     const accountDetails = await verifyAccountAPI(transfer.account_number, transfer.bank_code);
     if (accountDetails.status === 'success') {
         transfer.account_name = accountDetails.data;
-    };
+    }
 
     return { transfer, isValid: accountDetails.status == 'success' ? true : false };
 };

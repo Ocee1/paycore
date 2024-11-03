@@ -94,7 +94,17 @@ const checkForBulkAndUpdateStatus = async (bulk_transfer_id) => {
     }
 }
 
-
+const bulkUpdateStatus = async (bulkId) => {
+    try {
+        const result = await Transfer.knex()('transfers') // `transfers` is the table name
+            .where('bulk_transfer_id', bulkId) // Specify the bulkId to filter the rows
+            .update({ status: 1 }); // Set status to 1
+        console.log('Bulk update successful');
+        return result;
+    } catch (error) {
+        console.error('Error during bulk update:', error);
+    }
+};
 
 
 
@@ -112,5 +122,6 @@ module.exports = {
     getPendingBulkTransfers,
     checkForBulkAndUpdateStatus,
     getAllPendingBulkTransfers,
-    bulkInsertTransfers
+    bulkInsertTransfers,
+    bulkUpdateStatus
 }

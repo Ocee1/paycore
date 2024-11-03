@@ -1,9 +1,9 @@
 const { Worker } = require('bullmq');
 const axios = require('axios');
 const { default: Redis } = require('ioredis');
-const {  BULK_TRANSFER_URL, headers } = require('../../config');
-const { getAllPendingBulkTransfers } = require('../../services/transferService');
-const { findTransactions, createTransaction,  } = require('../../services/transactionService');
+const { BULK_TRANSFER_URL, headers } = require('../../config');
+const { getAllPendingBulkTransfers, bulkUpdateStatus } = require('../../services/transferService');
+const { findTransactions, createTransaction, } = require('../../services/transactionService');
 const { getAccountByUserId, updateByAccount, checkUserBalance } = require('../../services/accountService');
 const { getArrayFromRedis, sIsMemberAsync, sAddAsync } = require('../../utils/helper');
 const redisConnection = new Redis({ maxRetriesPerRequest: null });
@@ -14,13 +14,12 @@ const connectio = { connection: redisConnection }
 const transferWorker = new Worker('transferQueue', async (job) => {
     const { bulk_transfer_id, userId, failedKey, passedVerificationKey } = job.data;
 
-
     try {
         // Check Redis to see if this bulk transfer ID has been processed
         const isProcessed = await sIsMemberAsync('processed_bulk_transfers', bulk_transfer_id);
         if (isProcessed) {
             console.log(`Bulk transfer ${bulk_transfer_id} has already been processed.`);
-            return; 
+            return;
         };
 
         const isExisting = await findTransactions({ bulk_transfer_id });
@@ -43,6 +42,16 @@ const transferWorker = new Worker('transferQueue', async (job) => {
             })
             return "Failed to fetch pending transactions"
         };
+
+        // update status
+        const updatedTrf = await bulkUpdateStatus(bulk_transfer_id);
+        if (!updatedTrf) {
+            console.log({
+                status: 'fail',
+                message: 'Failed to update transfer status'
+            })
+            return "Failed to update transfer status"
+        }
 
         const sentTransfers = await getArrayFromRedis(passedVerificationKey);
         const failedTransfers = await getArrayFromRedis(failedKey);
@@ -83,7 +92,7 @@ const transferWorker = new Worker('transferQueue', async (job) => {
             }
         };
 
-        const modifiedTransfers = pendingTransfers.map(transfer => {
+        const bulkPayload = pendingTransfers.map(transfer => {
             return {
                 amount: transfer.amount,
                 bank: transfer.bank,
@@ -96,7 +105,6 @@ const transferWorker = new Worker('transferQueue', async (job) => {
             };
         });
 
-        console.log(`the failing array =------=========================`, modifiedTransfers)
 
         //deduct the transfer amount + fee from user balance, update user balance
         const newBalance = currentBalance - totalDebit;
@@ -112,7 +120,7 @@ const transferWorker = new Worker('transferQueue', async (job) => {
         const trxData = {
             userId: userId,
             type: 'bulk_transfer',
-            amount: totalDebit,
+            amount: totalAmount,
             status: 1,
             fee: totalFees,
             meta_data: JSON.stringify(meta_data),
@@ -129,7 +137,7 @@ const transferWorker = new Worker('transferQueue', async (job) => {
 
         //
 
-        let response = await axios.post(BULK_TRANSFER_URL, { recipients: modifiedTransfers }, {
+        let response = await axios.post(BULK_TRANSFER_URL, { recipients: bulkPayload }, {
             headers: headers,
         });
         if (response.data.status === "success") {
@@ -138,6 +146,11 @@ const transferWorker = new Worker('transferQueue', async (job) => {
                 data: response
             };
         }
+
+
+
+
+        
 
 
         // ignore down 
@@ -177,6 +190,5 @@ const transferWorker = new Worker('transferQueue', async (job) => {
         console.error('Error performing transactions', error);
     }
 }, connectio);
-
 
 module.exports = { transferWorker };

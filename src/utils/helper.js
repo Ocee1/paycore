@@ -10,6 +10,22 @@ const saveArrayToRedis = async (key, array) => {
     }
 };
 
+const addItemToRedisList = async (key, newItem) => {
+    try {
+        // Retrieve the current array from Redis
+        const reply = await client.get(key);
+        let array = JSON.parse(reply) || []; 
+
+        // Add new item to the array
+        array.push(newItem);
+
+        // Save the updated array back to Redis
+        await saveArrayToRedis(key, array);
+    } catch (err) {
+        console.error('Error adding item to Redis list:', err);
+    }
+};
+
 // Function to retrieve the array from Redis
 const getArrayFromRedis = async (key) => {
     try {
@@ -28,20 +44,20 @@ const getArrayFromRedis = async (key) => {
 // Promisify Redis commands for better async/await handling
 const sAddAsync = async (key, data) => {
     try {
-        const result = await client.sAdd(key, data)
+        const result = await client.sAdd(key, [data.toString()])
         return result;
     } catch (err) {
-        console.error('Error retrieving array from Redis:', err);
+        console.error('Error adding bulk key to redis:', err.message);
         return null;
     }
 }
 
-const sIsMemberAsync = async (key) => {
+const sIsMemberAsync = async (key, member) => {
     try {
-        const result = await client.sIsMember(key);
+        const result = await client.sIsMember(key, member.toString());
         return result;
     } catch (err) {
-        console.error('Error retrieving bulk from Redis:', err);
+        console.error('Error retrieving bulk id from Redis:', err.message);
         return null;
     }
 }
@@ -50,5 +66,6 @@ module.exports = {
     saveArrayToRedis,
     getArrayFromRedis,
     sAddAsync,
-    sIsMemberAsync
+    sIsMemberAsync,
+    addItemToRedisList
 };

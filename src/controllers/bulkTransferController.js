@@ -2,7 +2,6 @@ const { getTransactionFee } = require("../config");
 const { checkAccountQueue } = require("../queues/checkAccount/checkAccountQueue");
 const { getAccountByUserId } = require("../services/accountService");
 const { verifyTransactionPin } = require("../services/transactionService");
-const { saveArrayToRedis } = require("../utils/helper");
 const { generateBulkId } = require("../utils/token");
 
 const createBulkTransfer = async (req, res) => {
@@ -92,12 +91,16 @@ const createBulkTransfer = async (req, res) => {
     // };
 
 
-
-    const redisKey = `transfer:${bulk_transfer_id}`
-    await saveArrayToRedis(redisKey, transfers);
+    // const redisKey = `transfer:${bulk_transfer_id}`
+    // await saveArrayToRedis(redisKey, transfers);
 
     // send to queue
-    checkAccountQueue.add('checkAccountQueue', { redisKey, bulk_transfer_id, userId: user.id });
+    // checkAccountQueue.add('checkAccountQueue', { redisKey, bulk_transfer_id, userId: user.id });
+
+    for (let x = 0; x < transfers.length; x++) {
+      const transfer = transfers[x];
+      checkAccountQueue.add('checkAccountQueue', { transfer, bulk_transfer_id, userId: user.id, transferIndex: x, length:transfers.length });
+    };
 
     res.status(200).json({
       status: 'success',
