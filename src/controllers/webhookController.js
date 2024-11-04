@@ -148,6 +148,7 @@ const processTransferHook = async (payload) => {
         status = payload.meta.status;
     }
 
+    // update bulk
     const trfUpdate = await getTransferByTrxRef(merchant_ref)
     let meta_data;
     if (trfUpdate.bulk_transfer_id) {
@@ -155,20 +156,15 @@ const processTransferHook = async (payload) => {
         meta_data = JSON.parse(pendingTransaction[0].meta_data);
     }
 
+    // update bulk transaction meta data
     if (status === 'failed') {
         await updatePendingTrfByRef(payload.merchant_ref, { status: 11, meta_data: meta });
         await updateTransactionByRef(merchant_ref, { status: 2 });
+        meta_data.summmary.total_failed++,
+            
         trfUpdate.bulk_transfer_id ? await updateBulkId(trfUpdate.bulk_transfer_id, {
-            meta_data: JSON.stringify({
-                bulk_reference: trfUpdate.bulk_transfer_id,
-                summary: {
-                    total_sent: meta_data.summary.total_sent,
-                    total_failed: meta_data.summary.total_failed++,
-                    total_amount: meta_data.summary.total_amount,
-                    transaction_fee: meta_data.summary.transaction_fee,
-                    total_success: meta_data.summary.total_success
-                }
-            })
+            status: 2,
+            meta_data: JSON.stringify(meta_data)
         }) : null
         console.log({ status: "Failed", Message: "Transfer failed" })
         return "Transaction failed"

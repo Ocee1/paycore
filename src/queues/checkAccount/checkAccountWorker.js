@@ -28,27 +28,26 @@ const checkAccountWorker = new Worker('checkAccountQueue', async (job) => {
         const vAccounts = await verifyAccount(transfer);
 
         // Filter results for failed and successful verifications
-        let passedVerification;
-        let failedVerification;
+        // let passedVerification;
+        // let failedVerification;
 
         const passedVerificationKey = `passedVerification:${bulk_transfer_id}`
         const failedKey = `failedTranfer:${bulk_transfer_id}`
         if (vAccounts.isValid && transferIndex === 0) {
             await saveArrayToRedis(passedVerificationKey, [vAccounts.transfer]);
-            passedVerification = vAccounts.transfer;
+
         } else if (!vAccounts.isValid && transferIndex === 0) {
             await saveArrayToRedis(failedKey, [vAccounts.transfer]);
-            failedVerification = vAccounts.transfer;
+
 
         } else if (vAccounts.isValid && transferIndex > 0) {
             await addItemToRedisList(passedVerificationKey, transfer)
-            passedVerification = vAccounts.transfer;
+
 
         } else {
             await addItemToRedisList(failedKey, transfer)
-            failedVerification = vAccounts.transfer;
-        }
 
+        }
 
         if (transferIndex === length - 1) {
             const verifiedTrfs = await getArrayFromRedis(passedVerificationKey)
