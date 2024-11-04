@@ -80,11 +80,14 @@ const transferWorker = new Worker('transferQueue', async (job) => {
             bulk_transfer_id,
             summary: {
                 total_sent: sentTransfers.length,
-                total_failed: failedTransfers ? failedTransfers.length : 0,
+                total_failed: 0,
                 total_amount: totalDebit,
                 transaction_fee: totalFees,
-                total_success: 0
-                
+                total_success: 0,
+                total_reversals: 0,
+                total_amount_successful: 0,
+                total_amount_failed: 0,
+                total_amount_reversed: 0,
             }
         };
         // passedVerificationDetails: sentTransfers ? sentTransfers.map(transfer => ({
@@ -152,7 +155,24 @@ const transferWorker = new Worker('transferQueue', async (job) => {
                 data: "Your bulk transfer is being processed"
             };
         } catch (error) {
-            await updatePendingTrxByBulkId(bulk_transfer_id, { status: 2 });
+            await updatePendingTrxByBulkId(bulk_transfer_id, {
+                status: 2,
+                meta_data: JSON.stringify({
+                    bulk_transfer_id,
+                    summary: {
+                        total_sent: sentTransfers.length,
+                        total_failed: sentTransfers.length,
+                        total_success: 0,
+                        total_reversals: 0,
+                        total_amount: totalDebit,
+                        transaction_fee: totalFees,
+                        total_amount_successful: 0,
+                        total_amount_failed: totalDebit,
+                        total_amount_reversed: 0,
+
+                    }
+                })
+            });
             await Transfer.query().patch({ status: 11 }).where({ bulk_transfer_id });
             console.log('error creating transfer on atlas', error.message)
             return 'error creating transfer on atlas'

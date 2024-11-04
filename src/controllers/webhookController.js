@@ -136,7 +136,6 @@ const processTransferHook = async (payload) => {
     const { merchant_ref, meta, trx_ref } = payload;
     const { account_name, account_bank, account_number, narration, currency, amount, secret, type } = meta;
 
-    console.log("======= the payload for the webhook bulk ======", payload)
     const existingTransfer = await getTrfBySessionId(payload.session_id);
     if (existingTransfer) {
         return 'Duplicate transaction';
