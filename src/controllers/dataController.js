@@ -91,6 +91,7 @@ const purchaseData = async (req, res) => {
 
                 return { status: 'failed', error };
             });
+            
         if (response.status === 'failed') {
             await findTransactionByIdAndUpdate(transaction.id, { status: 2 });
             await updateDataById(savedTable.id, { status: 11 });
@@ -104,7 +105,7 @@ const purchaseData = async (req, res) => {
         };
 
         await findTransactionByIdAndUpdate(transaction.id, { status: 3 });
-        await updateDataById(savedTable.id, { 
+        await updateDataById(savedTable.id, {
             status: 3,
             reference: response.data.reference,
             amount_charged: response.data.amount_charged

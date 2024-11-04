@@ -3,9 +3,10 @@ const axios = require('axios');
 const { default: Redis } = require('ioredis');
 const { BULK_TRANSFER_URL, headers } = require('../../config');
 const { getAllPendingBulkTransfers, bulkUpdateStatus } = require('../../services/transferService');
-const { findTransactions, createTransaction, } = require('../../services/transactionService');
+const { findTransactions, createTransaction, updatePendingTrxByBulkId, } = require('../../services/transactionService');
 const { getAccountByUserId, updateByAccount, checkUserBalance } = require('../../services/accountService');
 const { getArrayFromRedis, sIsMemberAsync, sAddAsync } = require('../../utils/helper');
+const Transfer = require('../../models/transfer');
 const redisConnection = new Redis({ maxRetriesPerRequest: null });
 // const { performTransfer } = require('../../services/transferService');
 
@@ -74,24 +75,27 @@ const transferWorker = new Worker('transferQueue', async (job) => {
             return `User with id: ${userId} has insufficient funds.`
         };
 
+
         const meta_data = {
             bulk_transfer_id,
             summary: {
                 total_sent: sentTransfers.length,
-                total_failed: failedTransfers.length,
+                total_failed: failedTransfers ? failedTransfers.length : 0,
                 total_amount: totalDebit,
-                passedVerificationDetails: sentTransfers.map(transfer => ({
-                    accountNumber: transfer.accountNumber,
-                    amount: transfer.amount,
-                })),
-                failedVerificationDetails: failedTransfers.map(transfer => ({
-                    transferId: transfer.id,
-                    accountNumber: transfer.accountNumber,
-                    error: "Failed account verification",
-                })),
+                transaction_fee: totalFees,
+                total_success: 0
+                
             }
         };
-
+        // passedVerificationDetails: sentTransfers ? sentTransfers.map(transfer => ({
+        //     accountNumber: transfer.accountNumber,
+        //     amount: transfer.amount,
+        // })) : [],
+        // failedVerificationDetails: failedTransfers ? failedTransfers.map(transfer => ({
+        //     transferId: transfer.id,
+        //     accountNumber: transfer.accountNumber,
+        //     error: "Failed account verification",
+        // })) : [],
         const bulkPayload = pendingTransfers.map(transfer => {
             return {
                 amount: transfer.amount,
@@ -137,20 +141,37 @@ const transferWorker = new Worker('transferQueue', async (job) => {
 
         //
 
-        let response = await axios.post(BULK_TRANSFER_URL, { recipients: bulkPayload }, {
-            headers: headers,
-        });
-        if (response.data.status === "success") {
+        try {
+            let response = await axios.post(BULK_TRANSFER_URL, { recipients: bulkPayload }, {
+                headers: headers,
+            });
+            console.log('transaction is being processed', response.data.status)
+
             return {
                 status: true,
-                data: response
+                data: "Your bulk transfer is being processed"
             };
+        } catch (error) {
+            await updatePendingTrxByBulkId(bulk_transfer_id, { status: 2 });
+            await Transfer.query().patch({ status: 11 }).where({ bulk_transfer_id });
+            console.log('error creating transfer on atlas', error.message)
+            return 'error creating transfer on atlas'
         }
+        // if (response.data.status === "success") {
+        //     return {
+        //         status: true,
+        //         data: response
+        //     };
+        // }
 
 
+        // console.log('transaction is being processed')
 
+        // return {
+        //     status: true,
+        //     data: "Your bulk transfer is being processed"
+        // };
 
-        
 
 
         // ignore down 
@@ -184,10 +205,10 @@ const transferWorker = new Worker('transferQueue', async (job) => {
         //     });
         // }
 
-        console.log('transaction is being processed')
+        // console.log('transaction is being processed')
 
     } catch (error) {
-        console.error('Error performing transactions', error);
+        console.error('Error performing transactions::::', error);
     }
 }, connectio);
 

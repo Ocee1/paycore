@@ -49,7 +49,16 @@ const updatePendingTrxByRef = async (trx_ref, data) => {
     .patch(data);
 
     return result;
-}
+};
+
+const updatePendingTrxByBulkId = async (bulk_transfer_id, data) => {
+    const result = await Transaction.query()
+    .where('bulk_transfer-id', bulk_transfer_id)
+    .patch(data);
+
+    return result;
+};
+
 const updateTxnByBulkId = async (bulk_transfer_id, data) => {
     const result = await Transaction.query()
     .where('bulk_transfer_id', bulk_transfer_id)
@@ -92,5 +101,6 @@ module.exports = {
     verifyTransactionPin,
     findTransactions,
     updateTxnByBulkId,
-    updateBulkId
+    updateBulkId,
+    updatePendingTrxByBulkId
 }

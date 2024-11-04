@@ -5,7 +5,7 @@ const { sendCreditMail } = require('../mailer');
 const Deposit = require('../models/deposit');
 const { getAccount, updateByAccount } = require('../services/accountService');
 const { getDepositBySessionId, createDeposit } = require('../services/depositService');
-const { createTransaction, updateTransactionByRef } = require('../services/transactionService');
+const { createTransaction, updateTransactionByRef, updateBulkId, getTransactionById, findTransactions } = require('../services/transactionService');
 const { findTransferByIdAndUpdate, updateTransferByRef, updatePendingTrfByRef, getTrfBySessionId, checkForBulkAndUpdateStatus, getTransferByTrxRef } = require('../services/transferService');
 const { getUserByEmail, getUserById } = require('../services/user.service');
 const { updateWebhook, getWebhook, createWebhook } = require('../services/webHook');
@@ -136,6 +136,7 @@ const processTransferHook = async (payload) => {
     const { merchant_ref, meta, trx_ref } = payload;
     const { account_name, account_bank, account_number, narration, currency, amount, secret, type } = meta;
 
+    console.log("======= the payload for the webhook bulk ======", payload)
     const existingTransfer = await getTrfBySessionId(payload.session_id);
     if (existingTransfer) {
         return 'Duplicate transaction';
@@ -148,9 +149,28 @@ const processTransferHook = async (payload) => {
         status = payload.meta.status;
     }
 
-    if (status === 'fail') {
-        await updatePendingTrfByRef(payload, { status: 11, meta_data: meta });
+    const trfUpdate = await getTransferByTrxRef(merchant_ref)
+    let meta_data;
+    if (trfUpdate.bulk_transfer_id) {
+        const pendingTransaction = await findTransactions({ bulk_transfer_id: trfUpdate.bulk_transfer_id });
+        meta_data = JSON.parse(pendingTransaction[0].meta_data);
+    }
+
+    if (status === 'failed') {
+        await updatePendingTrfByRef(payload.merchant_ref, { status: 11, meta_data: meta });
         await updateTransactionByRef(merchant_ref, { status: 2 });
+        trfUpdate.bulk_transfer_id ? await updateBulkId(trfUpdate.bulk_transfer_id, {
+            meta_data: JSON.stringify({
+                bulk_reference: trfUpdate.bulk_transfer_id,
+                summary: {
+                    total_sent: meta_data.summary.total_sent,
+                    total_failed: meta_data.summary.total_failed++,
+                    total_amount: meta_data.summary.total_amount,
+                    transaction_fee: meta_data.summary.transaction_fee,
+                    total_success: meta_data.summary.total_success
+                }
+            })
+        }) : null
         console.log({ status: "Failed", Message: "Transfer failed" })
         return "Transaction failed"
     }
@@ -160,17 +180,29 @@ const processTransferHook = async (payload) => {
         payment_gateway_ref: trx_ref
     });
 
-    const trfUpdate = await getTransferByTrxRef(merchant_ref)
+
 
 
     if (trfUpdate.bulk_transfer_id) {
         const bulk_id = trfUpdate.bulk_transfer_id;
+        const updateBulkTxn = await updateBulkId(bulk_id, {
+            meta_data: JSON.stringify({
+                bulk_reference: trfUpdate.bulk_transfer_id,
+                summary: {
+                    total_sent: meta_data.summary.total_sent,
+                    total_failed: meta_data.summary.total_failed,
+                    total_amount: meta_data.summary.total_amount,
+                    transaction_fee: meta_data.summary.transaction_fee,
+                    total_success: meta_data.summary.total_success + 1
+                }
+            })
+        })
         const tryBulk = checkForBulkAndUpdateStatus(bulk_id);
         if (!tryBulk) {
             console.log('bulk not completed!!!!!')
         }
     } else {
-        const ment = await updateTransactionByRef(merchant_ref, {
+        const updatedTxn = await updateTransactionByRef(merchant_ref, {
             status: 3,
             payment_gateway_ref: trx_ref
         });

@@ -34,37 +34,20 @@ const checkAccountWorker = new Worker('checkAccountQueue', async (job) => {
         const passedVerificationKey = `passedVerification:${bulk_transfer_id}`
         const failedKey = `failedTranfer:${bulk_transfer_id}`
         if (vAccounts.isValid && transferIndex === 0) {
-            console.log('This account passed verification:', vAccounts);
             await saveArrayToRedis(passedVerificationKey, [vAccounts.transfer]);
             passedVerification = vAccounts.transfer;
         } else if (!vAccounts.isValid && transferIndex === 0) {
             await saveArrayToRedis(failedKey, [vAccounts.transfer]);
             failedVerification = vAccounts.transfer;
-            console.log('This account failed verification:', failedVerification);
-        } else if (vAccounts.isValid && transferIndex > 1) {
+
+        } else if (vAccounts.isValid && transferIndex > 0) {
             await addItemToRedisList(passedVerificationKey, transfer)
             passedVerification = vAccounts.transfer;
+
         } else {
             await addItemToRedisList(failedKey, transfer)
             failedVerification = vAccounts.transfer;
         }
-
-        // const newVerifiedArray = {
-        //     ...passedVerification,
-        //     trx_ref: generateReference(),
-        //     status: 0,
-        //     bulk_transfer_id: bulk_transfer_id,
-        //     userId: userId,
-        // };
-
-        // add failed and successful verification to redis
-
-
-        // await saveArrayToRedis(failedKey, failedVerification);
-        // await saveArrayToRedis(passedVerificationKey, passedVerification);
-
-        // console.log(`passedd verification tfssss:   ${newVerifiedArray}`)
-        // bulk save succesfully verified transfers 
 
 
         if (transferIndex === length - 1) {
