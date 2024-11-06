@@ -43,7 +43,11 @@ cron.schedule('*/2 * * * *', async () => {
       const pendingTransaction = await findTransactions({ bulk_transfer_id: failedTransfer.bulk_transfer_id });
       meta_data = JSON.parse(pendingTransaction[0].meta_data);
       meta_data.summary.total_amount_reversed += failedTransfer.amount;
-      meta_data.summary.total_reversals += 1;
+      meta_data.summary.total_reversals++;
+      meta_data.summary.total_amount += failedTransfer.amount;
+      meta_data.summary.total_amount_failed += failedTransfer.amount;
+      meta_data.summary.total_failed++;
+      meta_data.summary.transaction_fee += failedTransfer.transaction_fee;
       const updateBulkTransaction = await updateBulkId(failedTransfer.bulk_transfer_id, {
         status: 2,
         meta_data: JSON.stringify(meta_data)
@@ -102,7 +106,6 @@ cron.schedule('*/2 * * * *', async () => {
 
     //send a mail to notify user about the reversal
 
-
     await reversalMail(user.email, { account_number: userAccount.account_number, amount: userBalance })
 
     console.log(`Reversed transaction successful!`);
@@ -111,3 +114,4 @@ cron.schedule('*/2 * * * *', async () => {
     console.error('Error reversing transactions:', error);
   }
 });
+

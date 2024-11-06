@@ -13,7 +13,7 @@ const redisConnection = new Redis({ maxRetriesPerRequest: null });
 const connectio = { connection: redisConnection }
 
 const transferWorker = new Worker('transferQueue', async (job) => {
-    const { bulk_transfer_id, userId, failedKey, passedVerificationKey } = job.data;
+    const { bulk_transfer_id, userId, passedVerificationKey } = job.data;
 
     try {
         // Check Redis to see if this bulk transfer ID has been processed
@@ -55,7 +55,7 @@ const transferWorker = new Worker('transferQueue', async (job) => {
         }
 
         const sentTransfers = await getArrayFromRedis(passedVerificationKey);
-        const failedTransfers = await getArrayFromRedis(failedKey);
+        // const failedTransfers = await getArrayFromRedis(failedKey);
         const { totalAmount, totalFees } = pendingTransfers.reduce((acc, transfer) => {
             acc.totalAmount += transfer.amount;
             acc.totalFees += transfer.fee;
@@ -75,7 +75,8 @@ const transferWorker = new Worker('transferQueue', async (job) => {
             return `User with id: ${userId} has insufficient funds.`
         };
 
-
+        // total fee and debit should be dependent on the response on the webhook
+        // most of the fields are to be updated at the point of receiving webhook
         const meta_data = {
             bulk_transfer_id,
             summary: {
@@ -90,6 +91,7 @@ const transferWorker = new Worker('transferQueue', async (job) => {
                 total_amount_reversed: 0,
             }
         };
+        
         // passedVerificationDetails: sentTransfers ? sentTransfers.map(transfer => ({
         //     accountNumber: transfer.accountNumber,
         //     amount: transfer.amount,
@@ -142,8 +144,6 @@ const transferWorker = new Worker('transferQueue', async (job) => {
             return "Error in creating transaction";
         };
 
-        //
-
         try {
             let response = await axios.post(BULK_TRANSFER_URL, { recipients: bulkPayload }, {
                 headers: headers,
@@ -156,76 +156,12 @@ const transferWorker = new Worker('transferQueue', async (job) => {
             };
         } catch (error) {
             await updatePendingTrxByBulkId(bulk_transfer_id, {
-                status: 2,
-                meta_data: JSON.stringify({
-                    bulk_transfer_id,
-                    summary: {
-                        total_sent: sentTransfers.length,
-                        total_failed: sentTransfers.length,
-                        total_success: 0,
-                        total_reversals: 0,
-                        total_amount: totalDebit,
-                        transaction_fee: totalFees,
-                        total_amount_successful: 0,
-                        total_amount_failed: totalDebit,
-                        total_amount_reversed: 0,
-
-                    }
-                })
+                status: 2
             });
             await Transfer.query().patch({ status: 11 }).where({ bulk_transfer_id });
             console.log('error creating transfer on atlas', error.message)
             return 'error creating transfer on atlas'
         }
-        // if (response.data.status === "success") {
-        //     return {
-        //         status: true,
-        //         data: response
-        //     };
-        // }
-
-
-        // console.log('transaction is being processed')
-
-        // return {
-        //     status: true,
-        //     data: "Your bulk transfer is being processed"
-        // };
-
-
-
-        // ignore down 
-        // for (const transfer of pendingTransfers) {
-        //     await findTransferByIdAndUpdate({ status: 1 }, transfer.id);
-        //     // if (!processingBulkId.has(bulk_transfer_id)) {
-        //     //     processingBulkId.add(bulk_transfer_id);
-        //     // }
-        //     const data = {
-        //         amount: transfer.amount,
-        //         bank: transfer.bank,
-        //         bank_code: transfer.bank_code,
-        //         account_number: transfer.account_number,
-        //         account_name: transfer.account_name,
-        //         narration: transfer.narration,
-        //         reference: transfer.trx_ref,
-        //         currency: 'NGN'
-        //     };
-
-        //     const accountRes = await axios(atlasConfig(data, CREATE_TRANSFER_URL, 'post', ATLAS_SECRET));
-        //     if (accountRes.data.status !== 'success') {
-        //         // await Transaction.query().patch({ status: 2 }).where({ id: transfer.transactionId });
-        //         // await Transfer.query().patch({ status: 11 }).where({ id: pendingTransfer.id });
-        //         await updateBulkId(bulk_transfer_id, { status: 2 });
-        //         await findTransferByIdAndUpdate({ status: 11 }, transfer.id);
-        //         console.log('error creating transfer on atlas');
-        //         return 'error creating transfer on atlas'
-        //     }
-        //     await updateTransferByRef(transfer.trx_ref, {
-        //         payment_gateway_ref: accountRes.data.data.trx_ref,
-        //     });
-        // }
-
-        // console.log('transaction is being processed')
 
     } catch (error) {
         console.error('Error performing transactions::::', error);

@@ -160,11 +160,8 @@ const processTransferHook = async (payload) => {
     if (status === 'failed') {
         await updatePendingTrfByRef(payload.merchant_ref, { status: 11, meta_data: meta });
         await updateTransactionByRef(merchant_ref, { status: 2 });
-        meta_data.summmary.total_failed++,
-            
         trfUpdate.bulk_transfer_id ? await updateBulkId(trfUpdate.bulk_transfer_id, {
-            status: 2,
-            meta_data: JSON.stringify(meta_data)
+            status: 2
         }) : null
         console.log({ status: "Failed", Message: "Transfer failed" })
         return "Transaction failed"
@@ -180,17 +177,12 @@ const processTransferHook = async (payload) => {
 
     if (trfUpdate.bulk_transfer_id) {
         const bulk_id = trfUpdate.bulk_transfer_id;
+        meta_data.summary.total_success++;
+        meta_data.summary.total_amount += trfUpdate.amount;
+        meta_data.summary.transaction_fee += trfUpdate.transaction_fee;
+        meta_data.summary.total_amount_successful += trfUpdate.amount;
         const updateBulkTxn = await updateBulkId(bulk_id, {
-            meta_data: JSON.stringify({
-                bulk_reference: trfUpdate.bulk_transfer_id,
-                summary: {
-                    total_sent: meta_data.summary.total_sent,
-                    total_failed: meta_data.summary.total_failed,
-                    total_amount: meta_data.summary.total_amount,
-                    transaction_fee: meta_data.summary.transaction_fee,
-                    total_success: meta_data.summary.total_success + 1
-                }
-            })
+            meta_data: JSON.stringify(meta_data)
         })
         const tryBulk = checkForBulkAndUpdateStatus(bulk_id);
         if (!tryBulk) {
